@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %></title>
+  <script src="https://cdn.plot.ly/plotly-2.35.0.min.js"></script>
+  <style><%= css %></style>
+</head>
+<body>
+  <div id="broadlistening-view-i18n" hidden data-messages='<%= i18n_json %>'></div>
+
+  <div style="max-width: 1200px; margin: 0 auto; padding: 1rem;">
+    <div style="text-align: center;">
+      <h1><%= title %></h1>
+      <p style="color: #666;"><%= comment_count %>件のコメントを分析</p>
+    </div>
+
+    <% if overview && !overview.empty? %>
+      <section style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+        <h3 style="margin-top: 0; margin-bottom: 1rem;">概要</h3>
+        <div><%= overview_html %></div>
+      </section>
+    <% end %>
+
+    <script id="report-data" type="application/json"><%= report_json %></script>
+    <div data-broadlistening-view-manager data-data-source="report-data" id="chart-container"></div>
+    <p style="text-align: center; color: #666; font-size: 0.875rem; margin-top: 0.5rem;">
+      ドラッグで移動、スクロールでズームできます。ツリーマップではクラスタをクリックして詳細を確認できます。
+    </p>
+
+    <% if clusters.any? -%>
+      <section style="margin-top: 2rem;" id="cluster-overview-section">
+        <h3 style="margin-bottom: 1rem;">クラスター概要</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;" id="cluster-grid">
+          <% clusters.each_with_index do |cluster, index| -%>
+            <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1rem; border-left: 4px solid <%= cluster_color.call(index) %>;"
+                 data-cluster-id="<%= cluster["id"] %>">
+              <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: <%= cluster_color.call(index) %>;"></span>
+                <span style="font-weight: 600; font-size: 0.875rem;"><%= cluster["label"] %></span>
+              </div>
+              <div style="margin-bottom: 0.5rem;">
+                <span style="display: inline-flex; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; background-color: <%= cluster_color.call(index) %>20; color: <%= cluster_color.call(index) %>;">
+                  <%= cluster["value"] %>件の意見
+                </span>
+              </div>
+              <% if cluster["takeaway"] && !cluster["takeaway"].empty? -%>
+                <p style="color: #444; font-size: 0.875rem; margin: 0; line-height: 1.5;"><%= cluster["takeaway"] %></p>
+              <% end -%>
+            </div>
+          <% end -%>
+        </div>
+      </section>
+    <% end -%>
+  </div>
+
+  <script><%= js %></script>
+</body>
+</html>

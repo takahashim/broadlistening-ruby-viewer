@@ -1,0 +1,691 @@
+// Decidim Broadlistening View Styles
+
+// Chart wrapper and container
+.blv-chart-wrapper {
+  width: 100%;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.blv-chart-container {
+  width: 100%;
+}
+
+.blv-chart-plot {
+  width: 100%;
+  height: 350px;
+
+  @media (min-width: 768px) {
+    height: 500px;
+  }
+
+  &--fullscreen {
+    height: 100%;
+  }
+}
+
+// Toolbar
+.blv-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+
+  &__buttons {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    &--active {
+      background: #fff;
+      border-color: #d1d5db;
+      color: #111827;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    &--icon {
+      padding: 0.5rem;
+
+      span {
+        display: none;
+      }
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+  }
+}
+
+// Breadcrumb navigation
+.blv-breadcrumb {
+  display: none;
+  padding: 0.5rem 1rem;
+  background: #f0f9ff;
+  border-bottom: 1px solid #bae6fd;
+
+  &__content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #0369a1;
+  }
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+  }
+
+  &__separator {
+    display: flex;
+    align-items: center;
+    color: #94a3b8;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  &__item {
+    font-size: 0.875rem;
+    color: #334155;
+
+    &--link {
+      background: none;
+      border: none;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #0284c7;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: #e0f2fe;
+        color: #0369a1;
+      }
+    }
+
+    &--current {
+      font-weight: 600;
+      padding: 0.25rem 0.5rem;
+      background: #0284c7;
+      color: #fff;
+      border-radius: 4px;
+    }
+  }
+}
+
+// Fullscreen breadcrumb
+.blv-fullscreen-modal__breadcrumb {
+  padding: 0 1rem;
+
+  .blv-breadcrumb__content {
+    padding: 0.5rem 0;
+  }
+}
+
+// Fullscreen modal
+.blv-fullscreen-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+    flex-shrink: 0;
+  }
+
+  &__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #6b7280;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    svg {
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  &__content {
+    flex: 1;
+    overflow: hidden;
+    padding: 1rem;
+  }
+}
+
+// Legacy chart styles (for backward compatibility)
+.broadlistening-view-chart {
+  width: 100%;
+  min-height: 500px;
+
+  &__plot {
+    width: 100%;
+    height: 500px;
+  }
+}
+
+.broadlistening-view-report {
+  &__header {
+    margin-bottom: 2rem;
+  }
+
+  &__title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  &__meta {
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  &__overview {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+
+    h3 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+.broadlistening-view-clusters {
+  margin-top: 2rem;
+
+  h3 {
+    margin-bottom: 1rem;
+  }
+
+  &__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+  }
+
+  &__item {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: box-shadow 0.2s;
+
+    &:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  &__color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &__label {
+    font-weight: bold;
+    flex: 1;
+  }
+
+  &__count {
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  &__takeaway {
+    color: #444;
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+// Cluster grid breadcrumb
+.blv-cluster-breadcrumb {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #0284c7;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #f0f9ff;
+      border-color: #0284c7;
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+  }
+
+  &__current {
+    font-size: 0.875rem;
+    color: #64748b;
+  }
+}
+
+// Cluster card selection states
+.blv-cluster-card--selected {
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.4) !important;
+  transform: scale(1.02);
+}
+
+.blv-cluster-card--in-path {
+  opacity: 0.7;
+}
+
+// Admin form styles
+.tabs {
+  margin-bottom: 1rem;
+
+  &__nav {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid #ddd;
+  }
+
+  &__title {
+    margin: 0;
+  }
+
+  &__link {
+    display: block;
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #666;
+
+    &:hover {
+      color: #333;
+    }
+
+    &.is-active {
+      color: #333;
+      border-bottom-color: #1f77b4;
+    }
+  }
+
+  &__panels {
+    padding-top: 1rem;
+  }
+
+  &__panel {
+    display: none;
+
+    &.is-active {
+      display: block;
+    }
+  }
+}
+
+// Toolbar segment control
+.blv-toolbar__segment {
+  display: inline-flex;
+  background: #e5e7eb;
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.blv-toolbar__segment-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #6b7280;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+  &:hover:not(.blv-toolbar__segment-btn--active):not(:disabled) {
+    color: #374151;
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  &--active {
+    background: #fff;
+    color: #111827;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  &:disabled {
+    color: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+}
+
+// Settings button
+.blv-settings-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: #6b7280;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #e5e7eb;
+    color: #374151;
+  }
+
+  &:disabled {
+    color: #d1d5db;
+    cursor: not-allowed;
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// Settings dialog
+.blv-settings-dialog {
+  // Hidden by default, shown by a11y-dialog-component
+  display: none;
+
+  // Backdrop (the container itself acts as backdrop)
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.4);
+
+  // When dialog is open
+  &[aria-hidden="false"] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  &__content {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+  }
+
+  &__title {
+    margin: 0;
+    padding: 1rem 1.25rem;
+    padding-right: 3rem; // Space for close button
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  &__close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #6b7280;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    &:focus {
+      outline: 2px solid #0284c7;
+      outline-offset: 2px;
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  // Override library's [data-dialog-container] grid layout
+  .blv-settings-dialog__container {
+    display: block;
+  }
+
+  &__body {
+    padding: 1.25rem;
+  }
+
+  &__field {
+    margin-bottom: 1.5rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #374151;
+    }
+  }
+
+  &__footer {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+}
+
+// Slider component
+.blv-slider {
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      background: #0284c7;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+
+      &:hover {
+        transform: scale(1.1);
+      }
+    }
+
+    &::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      background: #0284c7;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+
+      &:hover {
+        transform: scale(1.1);
+      }
+    }
+
+    &:focus::-webkit-slider-thumb {
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.3);
+    }
+
+    &:focus::-moz-range-thumb {
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.3);
+    }
+  }
+
+  &__labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+
+  &__value {
+    font-weight: 600;
+    color: #0284c7;
+  }
+}
+
+// Dense mode indicator
+.blv-dense-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #854d0e;
+  background: #fef9c3;
+  border-radius: 4px;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+}

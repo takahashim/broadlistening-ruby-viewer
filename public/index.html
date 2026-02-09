@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Broadlistening View</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.0.min.js"></script>
+  <link rel="stylesheet" href="./app.css">
+</head>
+<body>
+  <div id="broadlistening-view-i18n" hidden></div>
+  <div style="max-width: 1200px; margin: 0 auto; padding: 1rem;">
+    <div id="upload-area">
+      <div id="drop-zone" style="border: 2px dashed #ccc; border-radius: 8px; padding: 3rem; text-align: center;">
+        <p id="status-msg">Ruby VM を初期化中...</p>
+        <p>hierarchical_result.json をドラッグ&ドロップ</p>
+        <p>または</p>
+        <label style="cursor: pointer; color: #007bff;">
+          ファイルを選択
+          <input type="file" id="file-input" accept=".json" disabled style="display: none;">
+        </label>
+      </div>
+    </div>
+    <div id="content-area" hidden>
+      <div style="text-align: right; margin-bottom: 1rem;">
+        <button id="reload-btn" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 0.75rem; font-size: 0.875rem; font-weight: 500; color: #6b7280; background: #fff; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M5.46257 4.43262C7.21556 2.91688 9.5007 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12H4C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C9.53614 4 7.33243 5.11383 5.86492 6.86493L8 9H2V3L5.46257 4.43262Z"/></svg>
+          別のファイルを読み込む
+        </button>
+      </div>
+      <div id="content-body"></div>
+    </div>
+  </div>
+  <script type="module" src="./broadlistening-site.js"></script>
+</body>
+</html>
