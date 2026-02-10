@@ -63,17 +63,59 @@ function resetView() {
   document.getElementById("content-body").innerHTML = "";
   document.getElementById("upload-area").hidden = false;
   document.getElementById("content-area").hidden = true;
-  document.getElementById("file-input").value = "";
+
+  const spinner = document.getElementById("spinner");
+  const statusMsg = document.getElementById("status-msg");
+  const uploadInstructions = document.getElementById("upload-instructions");
+  const fileInput = document.getElementById("file-input");
+  const loadingIndicator = document.getElementById("loading-indicator");
+
+  // Remove any error detail
+  const oldDetail = loadingIndicator.querySelector(".blv-error-detail");
+  if (oldDetail) oldDetail.remove();
+
+  // Restore to ready state
+  spinner.style.display = "none";
+  statusMsg.textContent = "準備完了";
+  statusMsg.className = "blv-status-msg blv-status-msg--ready";
+  uploadInstructions.style.display = "";
+  fileInput.disabled = false;
+  fileInput.value = "";
 }
 
 function handleFile(file) {
+  const spinner = document.getElementById("spinner");
+  const statusMsg = document.getElementById("status-msg");
+  const loadingIndicator = document.getElementById("loading-indicator");
+  const uploadInstructions = document.getElementById("upload-instructions");
+  const fileInput = document.getElementById("file-input");
+
+  // Remove any previous error detail
+  const oldDetail = loadingIndicator.querySelector(".blv-error-detail");
+  if (oldDetail) oldDetail.remove();
+
+  // Show loading state
+  spinner.style.display = "";
+  statusMsg.textContent = "JSON を読み込み中...";
+  statusMsg.className = "blv-status-msg";
+  uploadInstructions.style.display = "none";
+  fileInput.disabled = true;
+
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
       JSON.parse(e.target.result);
       showView(e.target.result);
     } catch (err) {
-      alert("JSON の読み込みに失敗しました: " + err.message);
+      spinner.style.display = "none";
+      statusMsg.textContent = "JSON の読み込みに失敗しました";
+      statusMsg.className = "blv-status-msg blv-status-msg--error";
+      const detail = document.createElement("p");
+      detail.className = "blv-error-detail";
+      detail.textContent = err.message || String(err);
+      loadingIndicator.appendChild(detail);
+      uploadInstructions.style.display = "";
+      fileInput.disabled = false;
     }
   };
   reader.readAsText(file);
@@ -83,13 +125,25 @@ async function init() {
   const statusMsg = document.getElementById("status-msg");
   const fileInput = document.getElementById("file-input");
   const dropZone = document.getElementById("drop-zone");
+  const spinner = document.getElementById("spinner");
+  const loadingIndicator = document.getElementById("loading-indicator");
+  const uploadInstructions = document.getElementById("upload-instructions");
 
   try {
     vm = await initRubyVM();
+    spinner.style.display = "none";
     statusMsg.textContent = "準備完了";
+    statusMsg.classList.add("blv-status-msg--ready");
     fileInput.disabled = false;
+    uploadInstructions.style.display = "";
   } catch (err) {
-    statusMsg.textContent = "Ruby VM の初期化に失敗しました";
+    spinner.style.display = "none";
+    statusMsg.textContent = "Viewerの初期化に失敗しました";
+    statusMsg.classList.add("blv-status-msg--error");
+    const detail = document.createElement("p");
+    detail.className = "blv-error-detail";
+    detail.textContent = err.message || String(err);
+    loadingIndicator.appendChild(detail);
     console.error(err);
     return;
   }
