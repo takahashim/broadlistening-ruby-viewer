@@ -33,7 +33,7 @@ pnpm run build:site
 ### ローカル確認
 
 ```bash
-pnpm dlx serve public
+ruby -run -e httpd public
 ```
 
 ブラウザで開き、`hierarchical_result.json` をドラッグ&ドロップすると可視化が表示されます。

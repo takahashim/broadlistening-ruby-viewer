@@ -37,7 +37,7 @@ The following files are generated in `public/`:
 ### Local Preview
 
 ```bash
-pnpm dlx serve public
+ruby -run -e httpd public
 ```
 
 Open the site in a browser, then drag and drop `hierarchical_result.json`.
