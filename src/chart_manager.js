@@ -123,16 +123,16 @@ export default class ChartManager {
 
   createLayout() {
     this.container.innerHTML = `
-      <div class="blv-chart-wrapper">
-        <div class="blv-toolbar"></div>
-        <div class="blv-breadcrumb"></div>
-        <div class="blv-chart-container"></div>
+      <div class="w-full bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div data-blv="toolbar" class="flex justify-between items-center px-4 py-3 border-b border-gray-200 bg-gray-50"></div>
+        <div data-blv="breadcrumb" class="hidden px-4 py-2 bg-sky-50 border-b border-sky-200"></div>
+        <div data-blv="chart-container" class="w-full"></div>
       </div>
     `;
 
-    this.toolbarContainer = this.container.querySelector(".blv-toolbar");
-    this.breadcrumbContainer = this.container.querySelector(".blv-breadcrumb");
-    this.chartContainer = this.container.querySelector(".blv-chart-container");
+    this.toolbarContainer = this.container.querySelector('[data-blv="toolbar"]');
+    this.breadcrumbContainer = this.container.querySelector('[data-blv="breadcrumb"]');
+    this.chartContainer = this.container.querySelector('[data-blv="chart-container"]');
 
     if (this.options.showToolbar) {
       this.renderToolbar();
@@ -173,17 +173,17 @@ export default class ChartManager {
 
     this.breadcrumbContainer.style.display = "block";
     this.breadcrumbContainer.innerHTML = `
-      <div class="blv-breadcrumb__content">
-        <span class="blv-breadcrumb__label">${escapeHtml(t("breadcrumb.viewing"))}</span>
-        <nav class="blv-breadcrumb__nav">
-          <button class="blv-breadcrumb__item blv-breadcrumb__item--link" data-cluster-id="">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs font-medium text-sky-700">${escapeHtml(t("breadcrumb.viewing"))}</span>
+        <nav class="flex items-center gap-1 flex-wrap">
+          <button class="text-sm bg-transparent border-none px-2 py-1 rounded cursor-pointer text-sky-600 transition-all duration-150 hover:bg-sky-100 hover:text-sky-700" data-cluster-id="">
             ${escapeHtml(t("breadcrumb.all"))}
           </button>
           ${path.map((cluster, index) => `
-            <span class="blv-breadcrumb__separator">${icon("arrow-right-s-line")}</span>
+            <span class="flex items-center text-slate-400 [&_svg]:w-3.5 [&_svg]:h-3.5">${icon("arrow-right-s-line")}</span>
             ${index === path.length - 1
-              ? `<span class="blv-breadcrumb__item blv-breadcrumb__item--current">${escapeHtml(cluster.label)}</span>`
-              : `<button class="blv-breadcrumb__item blv-breadcrumb__item--link" data-cluster-id="${escapeHtml(cluster.id)}">${escapeHtml(cluster.label)}</button>`
+              ? `<span class="text-sm font-semibold px-2 py-1 bg-sky-600 text-white rounded">${escapeHtml(cluster.label)}</span>`
+              : `<button class="text-sm bg-transparent border-none px-2 py-1 rounded cursor-pointer text-sky-600 transition-all duration-150 hover:bg-sky-100 hover:text-sky-700" data-cluster-id="${escapeHtml(cluster.id)}">${escapeHtml(cluster.label)}</button>`
             }
           `).join("")}
         </nav>
@@ -218,17 +218,17 @@ export default class ChartManager {
     }
 
     container.innerHTML = `
-      <div class="blv-breadcrumb__content">
-        <span class="blv-breadcrumb__label">${escapeHtml(t("breadcrumb.viewing"))}</span>
-        <nav class="blv-breadcrumb__nav">
-          <button class="blv-breadcrumb__item blv-breadcrumb__item--link" data-cluster-id="">
+      <div class="flex items-center gap-2 flex-wrap py-2">
+        <span class="text-xs font-medium text-sky-700">${escapeHtml(t("breadcrumb.viewing"))}</span>
+        <nav class="flex items-center gap-1 flex-wrap">
+          <button class="text-sm bg-transparent border-none px-2 py-1 rounded cursor-pointer text-sky-600 transition-all duration-150 hover:bg-sky-100 hover:text-sky-700" data-cluster-id="">
             ${escapeHtml(t("breadcrumb.all"))}
           </button>
           ${path.map((cluster, index) => `
-            <span class="blv-breadcrumb__separator">${icon("arrow-right-s-line")}</span>
+            <span class="flex items-center text-slate-400 [&_svg]:w-3.5 [&_svg]:h-3.5">${icon("arrow-right-s-line")}</span>
             ${index === path.length - 1
-              ? `<span class="blv-breadcrumb__item blv-breadcrumb__item--current">${escapeHtml(cluster.label)}</span>`
-              : `<button class="blv-breadcrumb__item blv-breadcrumb__item--link" data-cluster-id="${escapeHtml(cluster.id)}">${escapeHtml(cluster.label)}</button>`
+              ? `<span class="text-sm font-semibold px-2 py-1 bg-sky-600 text-white rounded">${escapeHtml(cluster.label)}</span>`
+              : `<button class="text-sm bg-transparent border-none px-2 py-1 rounded cursor-pointer text-sky-600 transition-all duration-150 hover:bg-sky-100 hover:text-sky-700" data-cluster-id="${escapeHtml(cluster.id)}">${escapeHtml(cluster.label)}</button>`
             }
           `).join("")}
         </nav>
@@ -351,7 +351,7 @@ export default class ChartManager {
     if (!this.clusterOverviewSection) return;
 
     // Remove existing breadcrumb if any
-    const existingBreadcrumb = this.clusterOverviewSection.querySelector(".blv-cluster-breadcrumb");
+    const existingBreadcrumb = this.clusterOverviewSection.querySelector('[data-blv="cluster-breadcrumb"]');
     if (existingBreadcrumb) {
       existingBreadcrumb.remove();
     }
@@ -364,14 +364,15 @@ export default class ChartManager {
 
     // Create breadcrumb element
     const breadcrumbEl = document.createElement("div");
-    breadcrumbEl.className = "blv-cluster-breadcrumb";
+    breadcrumbEl.dataset.blv = "cluster-breadcrumb";
+    breadcrumbEl.className = "mb-4 px-4 py-3 bg-slate-50 rounded-lg border border-slate-200";
     breadcrumbEl.innerHTML = `
-      <nav class="blv-cluster-breadcrumb__nav">
-        <button class="blv-cluster-breadcrumb__btn" data-navigate-cluster="">
+      <nav class="flex items-center flex-wrap gap-3">
+        <button class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-sky-600 bg-white border border-slate-200 rounded-md cursor-pointer transition-all duration-150 hover:bg-sky-50 hover:border-sky-600 [&_svg]:w-4 [&_svg]:h-4 [&_svg]:shrink-0" data-navigate-cluster="">
           ${icon("arrow-left-s-line")}
           ${escapeHtml(t("cluster.back_to_all"))}
         </button>
-        <span class="blv-cluster-breadcrumb__current">
+        <span class="text-sm text-slate-500">
           ${path.map(c => escapeHtml(c.label)).join(" > ")}
         </span>
       </nav>
@@ -401,8 +402,8 @@ export default class ChartManager {
     }
 
     // Clear container
-    this.chartContainer.innerHTML = '<div class="blv-chart-plot"></div>';
-    const plotContainer = this.chartContainer.querySelector(".blv-chart-plot");
+    this.chartContainer.innerHTML = '<div data-blv="chart-plot" class="w-full h-[350px] md:h-[500px]"></div>';
+    const plotContainer = this.chartContainer.querySelector('[data-blv="chart-plot"]');
 
     this.renderChartInto(plotContainer);
   }
@@ -426,7 +427,7 @@ export default class ChartManager {
       chart.render();
 
       // Store reference if rendering into main container
-      if (container === this.chartContainer?.querySelector(".blv-chart-plot")) {
+      if (container === this.chartContainer?.querySelector('[data-blv="chart-plot"]')) {
         this.scatterChart = chart;
       }
     } else if (this.viewMode === VIEW_MODES.SCATTER_DENSITY) {
@@ -447,7 +448,7 @@ export default class ChartManager {
       });
       chart.render();
 
-      if (container === this.chartContainer?.querySelector(".blv-chart-plot")) {
+      if (container === this.chartContainer?.querySelector('[data-blv="chart-plot"]')) {
         this.scatterChart = chart;
       }
     } else if (this.viewMode === VIEW_MODES.TREEMAP) {
@@ -459,7 +460,7 @@ export default class ChartManager {
       });
       chart.render();
 
-      if (container === this.chartContainer?.querySelector(".blv-chart-plot")) {
+      if (container === this.chartContainer?.querySelector('[data-blv="chart-plot"]')) {
         this.treemapChart = chart;
       }
     }

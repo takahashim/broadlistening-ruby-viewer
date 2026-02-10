@@ -43,20 +43,20 @@ export default class SettingsDialog {
     this.element.className = "blv-settings-dialog";
 
     this.element.innerHTML = `
-      <div id="${escapeHtml(dialogId)}-content" class="blv-settings-dialog__content">
+      <div id="${escapeHtml(dialogId)}-content" class="relative w-full max-w-[400px] bg-white rounded-xl shadow-lg overflow-hidden">
         <button type="button"
-                class="blv-settings-dialog__close"
+                class="absolute top-3 right-3 flex items-center justify-center w-8 h-8 p-0 bg-transparent border-none rounded-md cursor-pointer text-gray-500 transition-all duration-150 hover:bg-gray-100 hover:text-gray-900 focus:outline-2 focus:outline-sky-600 focus:outline-offset-2 [&_svg]:w-5 [&_svg]:h-5"
                 data-dialog-close="${escapeHtml(dialogId)}"
                 data-dialog-closable
                 aria-label="${escapeHtml(t("common.close"))}">
           ${icon("close-line")}
         </button>
         <div data-dialog-container class="blv-settings-dialog__container">
-          <h3 id="dialog-title-${escapeHtml(dialogId)}" data-dialog-title class="blv-settings-dialog__title">
+          <h3 id="dialog-title-${escapeHtml(dialogId)}" data-dialog-title class="m-0 px-5 py-4 pr-12 text-base font-semibold text-gray-900 border-b border-gray-200">
             ${escapeHtml(t("settings.title"))}
           </h3>
-          <div id="dialog-desc-${escapeHtml(dialogId)}" class="blv-settings-dialog__body">
-            <div class="blv-settings-dialog__field">
+          <div id="dialog-desc-${escapeHtml(dialogId)}" class="p-5">
+            <div class="mb-6 last:mb-0 [&_label]:block [&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-gray-700">
               <label for="${escapeHtml(dialogId)}-maxDensity">${escapeHtml(t("settings.max_density_label"))}</label>
               <div class="blv-slider">
                 <input type="range"
@@ -64,14 +64,14 @@ export default class SettingsDialog {
                        min="0.1" max="1" step="0.1"
                        value="${escapeHtml(String(maxDensity))}"
                        data-setting="maxDensity" />
-                <div class="blv-slider__labels">
+                <div class="flex justify-between mt-2 text-xs text-gray-500">
                   <span>10%</span>
-                  <span class="blv-slider__value">${escapeHtml(String(Math.round(maxDensity * 100)))}%</span>
+                  <span data-blv="slider-value" class="font-semibold text-sky-600">${escapeHtml(String(Math.round(maxDensity * 100)))}%</span>
                   <span>100%</span>
                 </div>
               </div>
             </div>
-            <div class="blv-settings-dialog__field">
+            <div class="mb-6 last:mb-0 [&_label]:block [&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-gray-700">
               <label for="${escapeHtml(dialogId)}-minValue">${escapeHtml(t("settings.min_value_label"))}</label>
               <div class="blv-slider">
                 <input type="range"
@@ -79,16 +79,16 @@ export default class SettingsDialog {
                        min="0" max="10" step="1"
                        value="${escapeHtml(String(minValue))}"
                        data-setting="minValue" />
-                <div class="blv-slider__labels">
+                <div class="flex justify-between mt-2 text-xs text-gray-500">
                   <span>0</span>
-                  <span class="blv-slider__value">${escapeHtml(t("common.items_count", { count: minValue }))}</span>
+                  <span data-blv="slider-value" class="font-semibold text-sky-600">${escapeHtml(t("common.items_count", { count: minValue }))}</span>
                   <span>10</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div data-dialog-actions class="blv-settings-dialog__footer">
+        <div data-dialog-actions class="px-5 py-4 border-t border-gray-200 flex justify-end gap-2">
           <button type="button"
                   class="button button__sm button__transparent-secondary"
                   data-dialog-close="${escapeHtml(dialogId)}">
@@ -134,7 +134,7 @@ export default class SettingsDialog {
     this.element.querySelectorAll("input[type='range']").forEach(input => {
       input.addEventListener("input", (e) => {
         const value = parseFloat(e.target.value);
-        const valueDisplay = e.target.parentElement.querySelector(".blv-slider__value");
+        const valueDisplay = e.target.parentElement.querySelector('[data-blv="slider-value"]');
         if (e.target.dataset.setting === "maxDensity") {
           valueDisplay.textContent = `${Math.round(value * 100)}%`;
         } else {

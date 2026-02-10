@@ -58,17 +58,17 @@ export default class FullscreenModal {
     });
 
     this.modal = document.createElement("div");
-    this.modal.className = "blv-fullscreen-modal";
+    this.modal.className = "fixed inset-0 z-[9999] flex flex-col bg-white";
     this.modal.innerHTML = `
-      <div class="blv-fullscreen-modal__header">
+      <div data-blv="fullscreen-header" class="flex justify-between items-center px-4 py-3 border-b border-gray-200 bg-gray-50 shrink-0">
         ${this.toolbar.render()}
-        <button class="blv-fullscreen-modal__close" data-action="close" title="${escapeHtml(t("common.close"))}">
+        <button class="flex items-center justify-center w-10 h-10 p-0 bg-transparent border-none rounded-lg cursor-pointer text-gray-500 transition-all duration-150 hover:bg-gray-200 hover:text-gray-900 [&_svg]:w-6 [&_svg]:h-6" data-action="close" title="${escapeHtml(t("common.close"))}">
           ${icon("close-line")}
         </button>
       </div>
-      <div class="blv-fullscreen-modal__breadcrumb"></div>
-      <div class="blv-fullscreen-modal__content">
-        <div class="blv-chart-plot blv-chart-plot--fullscreen"></div>
+      <div data-blv="fullscreen-breadcrumb" class="px-4"></div>
+      <div class="flex-1 overflow-hidden p-4">
+        <div data-blv="chart-plot" class="w-full h-full"></div>
       </div>
     `;
 
@@ -87,7 +87,7 @@ export default class FullscreenModal {
     if (!this.modal) return;
 
     // Bind toolbar events
-    const headerContainer = this.modal.querySelector(".blv-fullscreen-modal__header");
+    const headerContainer = this.modal.querySelector('[data-blv="fullscreen-header"]');
     this.toolbar.bindEvents(headerContainer);
 
     // Close button
@@ -110,7 +110,7 @@ export default class FullscreenModal {
    */
   getChartContainer() {
     if (!this.modal) return null;
-    return this.modal.querySelector(".blv-chart-plot");
+    return this.modal.querySelector('[data-blv="chart-plot"]');
   }
 
   /**
@@ -119,7 +119,7 @@ export default class FullscreenModal {
    */
   getBreadcrumbContainer() {
     if (!this.modal) return null;
-    return this.modal.querySelector(".blv-fullscreen-modal__breadcrumb");
+    return this.modal.querySelector('[data-blv="fullscreen-breadcrumb"]');
   }
 
   /**
@@ -151,7 +151,7 @@ export default class FullscreenModal {
    */
   updateToolbarState(state) {
     if (!this.modal || !this.toolbar) return;
-    const headerContainer = this.modal.querySelector(".blv-fullscreen-modal__header");
+    const headerContainer = this.modal.querySelector('[data-blv="fullscreen-header"]');
     this.toolbar.updateState(headerContainer, state);
     Object.assign(this.options, state);
   }

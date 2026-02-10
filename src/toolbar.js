@@ -50,33 +50,33 @@ export default class Toolbar {
       ? t("toolbar.density_disabled_title")
       : t("toolbar.density_title");
 
-    const activeClass = (mode) => viewMode === mode ? "blv-toolbar__segment-btn--active" : "";
+    const activeClass = (mode) => viewMode === mode ? "blv-active" : "";
 
     return `
-      <div class="blv-toolbar__segment">
-        <button class="blv-toolbar__segment-btn ${escapeHtml(activeClass(VIEW_MODES.SCATTER_ALL))}"
+      <div class="inline-flex bg-gray-200 rounded-md p-0.5 gap-0.5">
+        <button class="blv-segment-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-[0.8125rem] font-medium text-gray-500 bg-transparent border-none rounded cursor-pointer transition-all duration-150 whitespace-nowrap disabled:text-gray-400 disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:w-3.5 [&_svg]:h-3.5 [&_svg]:shrink-0 ${escapeHtml(activeClass(VIEW_MODES.SCATTER_ALL))}"
                 data-view-mode="${escapeHtml(VIEW_MODES.SCATTER_ALL)}"
                 title="${escapeHtml(t("toolbar.all_title"))}">
           ${icon("bubble-chart-line")}
           <span>${escapeHtml(t("toolbar.all"))}</span>
         </button>
-        <button class="blv-toolbar__segment-btn ${escapeHtml(activeClass(VIEW_MODES.SCATTER_DENSITY))}"
+        <button class="blv-segment-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-[0.8125rem] font-medium text-gray-500 bg-transparent border-none rounded cursor-pointer transition-all duration-150 whitespace-nowrap disabled:text-gray-400 disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:w-3.5 [&_svg]:h-3.5 [&_svg]:shrink-0 ${escapeHtml(activeClass(VIEW_MODES.SCATTER_DENSITY))}"
                 data-view-mode="${escapeHtml(VIEW_MODES.SCATTER_DENSITY)}"
                 title="${escapeHtml(densityBtnTitle)}"
                 ${densityBtnDisabled ? "disabled" : ""}>
           ${icon("focus-3-line")}
           <span>${escapeHtml(t("toolbar.density"))}</span>
         </button>
-        <button class="blv-toolbar__segment-btn ${escapeHtml(activeClass(VIEW_MODES.TREEMAP))}"
+        <button class="blv-segment-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-[0.8125rem] font-medium text-gray-500 bg-transparent border-none rounded cursor-pointer transition-all duration-150 whitespace-nowrap disabled:text-gray-400 disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:w-3.5 [&_svg]:h-3.5 [&_svg]:shrink-0 ${escapeHtml(activeClass(VIEW_MODES.TREEMAP))}"
                 data-view-mode="${escapeHtml(VIEW_MODES.TREEMAP)}"
                 title="${escapeHtml(t("toolbar.treemap_title"))}">
           ${icon("layout-grid-line")}
           <span>${escapeHtml(t("toolbar.treemap"))}</span>
         </button>
       </div>
-      <div class="blv-toolbar__actions">
+      <div class="flex gap-2">
         ${showSettings && hasDensityData ? `
-        <button class="blv-toolbar__btn"
+        <button class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-500 bg-transparent border border-transparent rounded-md cursor-pointer transition-all duration-150 hover:bg-gray-200 hover:text-gray-700 [&_svg]:w-4 [&_svg]:h-4 [&_svg]:shrink-0"
                 data-action="settings"
                 title="${escapeHtml(t("toolbar.settings_title"))}">
           ${icon("settings-3-line")}
@@ -84,7 +84,7 @@ export default class Toolbar {
         </button>
         ` : ""}
         ${showFullscreen ? `
-        <button class="blv-toolbar__btn blv-toolbar__btn--icon"
+        <button class="inline-flex items-center gap-1.5 p-2 text-sm font-medium text-gray-500 bg-transparent border border-transparent rounded-md cursor-pointer transition-all duration-150 hover:bg-gray-200 hover:text-gray-700 [&_svg]:w-4 [&_svg]:h-4 [&_svg]:shrink-0 [&_span]:hidden"
                 data-action="fullscreen"
                 title="${escapeHtml(t("toolbar.fullscreen_title"))}">
           ${icon("fullscreen-line")}
@@ -138,7 +138,7 @@ export default class Toolbar {
 
     container.querySelectorAll("[data-view-mode]").forEach(btn => {
       const isActive = btn.dataset.viewMode === viewMode;
-      btn.classList.toggle("blv-toolbar__segment-btn--active", isActive);
+      btn.classList.toggle("blv-active", isActive);
 
       // Update density button disabled state
       if (btn.dataset.viewMode === VIEW_MODES.SCATTER_DENSITY) {
