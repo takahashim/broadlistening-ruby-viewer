@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 require_relative "render"
 require "optparse"
-require "sass-embedded"
 
 options = { title: "分析結果", output: nil }
 OptionParser.new do |opts|
@@ -18,7 +17,7 @@ json_str = File.read(input_file)
 template_str = File.read(File.join(script_dir, "template.html.erb"))
 i18n_str = File.read(File.join(script_dir, "i18n", "ja.json"))
 js = File.read(File.join(script_dir, "dist", "broadlistening-view.js"))
-css = Sass.compile(File.join(script_dir, "src", "app.scss")).css
+css = File.read(File.join(script_dir, "dist", "app.css"))
 
 html = render_html(json_str, template_str, css, js, i18n_str, options[:title])
 File.write(output_file, html)
