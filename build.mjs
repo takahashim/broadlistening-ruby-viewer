@@ -28,7 +28,7 @@ if (target === "shared") {
     outfile: resolve(__dirname, "js/shared/plotly_shim.js"),
     format: "esm",
     bundle: true,
-    external: ["plotly.js-dist-min"],
+    minify: true,
     allowOverwrite: true,
   });
 } else if (target === "site") {
