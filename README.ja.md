@@ -3,7 +3,7 @@
 Broadlistening の分析結果 JSON を可視化するスタンドアロンツールです。
 
 1. 静的サイト (ruby.wasm): ブラウザ上で JSON をドラッグ&ドロップして可視化を表示
-2. HTML 生成 (generate.rb): コマンドラインで JSON から単一 HTML ファイルを生成
+2. HTML 生成 (exe/broadlistening-viewer): コマンドラインで JSON から単一 HTML ファイルを生成
 
 使用しているJSファイルは `decidim-broadlistening-view` と共有しています。
 
@@ -43,7 +43,7 @@ ruby -run -e httpd public
 
 `public/` ディレクトリをそのまま静的ホスティングに配置できます。
 
-## HTML 生成 (generate.rb)
+## HTML 生成 (`exe/broadlistening-viewer`)
 
 JSON から自己完結型の単一 HTML ファイルを生成します。Plotly を埋め込み JS に同梱するため、生成される HTML サイズは従来より大きくなります。
 
@@ -56,32 +56,49 @@ pnpm run build:dist
 ### HTML 生成
 
 ```bash
-bundle exec ruby generate.rb hierarchical_result.json
+ruby -Ilib exe/broadlistening-viewer hierarchical_result.json
 # => hierarchical_result.html が生成される
 
 # オプション
-bundle exec ruby generate.rb input.json -o output.html --title "タイトル"
+ruby -Ilib exe/broadlistening-viewer input.json -o output.html --title "タイトル"
 ```
+
+## ビルドスクリプト
+
+| コマンド | 概要 |
+|---------|-------------|
+| `pnpm run build` | siteとdistの両方をビルド |
+| `pnpm run build:site` | 静的サイト用に JS + CSS をビルド |
+| `pnpm run build:dist` | `exe/broadlistening-viewer` JS + CSS をビルド |
 
 ## ディレクトリ構成
 
 ```
-├── src/                  # JS/SCSS ソース (decidim-broadlistening-view からのコピー)
+├── broadlistening-viewer.gemspec  # gem 仕様
+├── lib/
+│   └── broadlistening/
+│       └── viewer/
+│           ├── renderer.rb        # Broadlistening::Viewer::Renderer クラス
+│           ├── version.rb         # バージョン定数
+│           └── assets/            # コア共有アセット (ビルド出力 + テンプレート)
+│               ├── template.html.erb
+│               ├── broadlistening-view.js  # pnpm run build:dist:js でビルド
+│               ├── app.css                 # pnpm run build:dist:css でビルド
+│               └── i18n/
+│                   └── ja.json    # 日本語メッセージ
+├── exe/
+│   └── broadlistening-viewer      # CLI 実行ファイル
+├── js/                   # JS/CSS ソース (decidim-broadlistening-view と共有)
+│   ├── entrypoint.js
 │   ├── chart_manager.js
 │   ├── scatter_chart.js
 │   ├── treemap_chart.js
 │   ├── plotly_shim.js    # npm パッケージ版 Plotly を返す standalone 版 shim
-│   ├── ...
-│   └── app.scss
+│   ├── app.css
+│   └── ...
 ├── site/
 │   └── entrypoint_site.js  # 静的サイト用エントリポイント (ruby.wasm)
 ├── public/               # 静的サイトのビルド出力 + index.html + ruby+stdlib.wasm
-├── dist/                 # generate.rb 用 JS バンドル出力
-├── i18n/
-│   └── ja.json           # 日本語メッセージ
-├── render.rb             # 共有レンダリング関数
-├── generate.rb           # HTML 生成スクリプト
-├── template.html.erb     # ERB テンプレート
 ├── build.mjs             # esbuild 設定
 └── package.json
 ```

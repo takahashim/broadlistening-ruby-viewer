@@ -7,7 +7,7 @@ A standalone tool to visualize Broadlistening analysis JSON files.
 It supports two usage modes:
 
 1. Static site (ruby.wasm): drag and drop JSON in the browser and view charts
-2. HTML generation (`generate.rb`): generate a single self-contained HTML file from JSON on the command line
+2. HTML generation (`exe/broadlistening-viewer`): generate a single self-contained HTML file from JSON on the command line
 
 The JavaScript sources are shared with `decidim-broadlistening-view`.
 
@@ -47,7 +47,7 @@ Open the site in a browser, then drag and drop `hierarchical_result.json`.
 
 Deploy the `public/` directory as-is to any static hosting service.
 
-## HTML Generation (`generate.rb`)
+## HTML Generation (`exe/broadlistening-viewer`)
 
 Generates a self-contained single HTML file from JSON. Plotly is bundled into the embedded JS, so output HTML size is larger than before.
 
@@ -60,11 +60,11 @@ pnpm run build:dist
 ### Generate HTML
 
 ```bash
-bundle exec ruby generate.rb hierarchical_result.json
+ruby -Ilib exe/broadlistening-viewer hierarchical_result.json
 # => hierarchical_result.html is generated
 
 # Option
-bundle exec ruby generate.rb input.json -o output.html --title "Title"
+ruby -Ilib exe/broadlistening-viewer input.json -o output.html --title "Title"
 ```
 
 ## Build Scripts
@@ -73,29 +73,36 @@ bundle exec ruby generate.rb input.json -o output.html --title "Title"
 |---------|-------------|
 | `pnpm run build` | Build both site and dist outputs |
 | `pnpm run build:site` | Build JS + CSS for the static site |
-| `pnpm run build:site:js` | Build only JS for the static site |
-| `pnpm run build:site:css` | Build only CSS for the static site |
-| `pnpm run build:dist` | Build JS bundle for `generate.rb` |
+| `pnpm run build:dist` | Build JS + CSS bundle for `exe/broadlistening-viewer` |
 
 ## Directory Structure
 
 ```
-├── src/                  # JS/SCSS sources (copied from decidim-broadlistening-view)
+├── broadlistening-viewer.gemspec  # gem specification
+├── lib/
+│   └── broadlistening/
+│       └── viewer/
+│           ├── renderer.rb        # Broadlistening::Viewer::Renderer class
+│           ├── version.rb         # version constant
+│           └── assets/            # core shared assets (build output + templates)
+│               ├── template.html.erb
+│               ├── broadlistening-view.js  # built by pnpm run build:dist:js
+│               ├── app.css                 # built by pnpm run build:dist:css
+│               └── i18n/
+│                   └── ja.json    # Japanese messages
+├── exe/
+│   └── broadlistening-viewer      # CLI executable
+├── js/                   # JS/CSS sources (shared with decidim-broadlistening-view)
+│   ├── entrypoint.js
 │   ├── chart_manager.js
 │   ├── scatter_chart.js
 │   ├── treemap_chart.js
 │   ├── plotly_shim.js    # standalone shim returning Plotly from npm package
-│   ├── ...
-│   └── app.scss
+│   ├── app.css
+│   └── ...
 ├── site/
 │   └── entrypoint_site.js  # entry point for static site (ruby.wasm)
 ├── public/               # static site build output + index.html + ruby+stdlib.wasm
-├── dist/                 # JS bundle output for generate.rb
-├── i18n/
-│   └── ja.json           # Japanese messages
-├── render.rb             # shared rendering function
-├── generate.rb           # HTML generation script
-├── template.html.erb     # ERB template
 ├── build.mjs             # esbuild configuration
 └── package.json
 ```
