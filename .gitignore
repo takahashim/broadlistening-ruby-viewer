@@ -1,4 +1,5 @@
 node_modules/
+js/shared/*.js
 lib/broadlistening/viewer/assets/broadlistening-view.js
 lib/broadlistening/viewer/assets/app.css
 public/broadlistening-site.js

@@ -2,29 +2,33 @@
 import { icon, escapeHtml } from "./decidim_core_shim";
 import { t } from "./i18n";
 
-// View mode constants (shared with chart_manager.js)
+// View mode constants (shared with chart_manager.ts)
 export const VIEW_MODES = {
   SCATTER_ALL: "scatterAll",
   SCATTER_DENSITY: "scatterDensity",
   TREEMAP: "treemap"
-};
+} as const;
+
+export type ViewMode = typeof VIEW_MODES[keyof typeof VIEW_MODES];
+
+interface ToolbarOptions {
+  viewMode: ViewMode;
+  hasDensityData: boolean;
+  isDenseGroupEnabled: boolean;
+  showSettings: boolean;
+  showFullscreen: boolean;
+  onViewModeChange: ((mode: ViewMode) => void) | null;
+  onSettingsClick: (() => void) | null;
+  onFullscreenClick: (() => void) | null;
+}
 
 /**
  * Toolbar component for view mode switching and actions
  */
 export default class Toolbar {
-  /**
-   * @param {Object} options
-   * @param {string} options.viewMode - Current view mode
-   * @param {boolean} options.hasDensityData - Whether density data is available
-   * @param {boolean} options.isDenseGroupEnabled - Whether dense group is enabled
-   * @param {boolean} options.showSettings - Whether to show settings button
-   * @param {boolean} options.showFullscreen - Whether to show fullscreen button
-   * @param {Function} options.onViewModeChange - Callback when view mode changes
-   * @param {Function} options.onSettingsClick - Callback when settings button clicked
-   * @param {Function} options.onFullscreenClick - Callback when fullscreen button clicked
-   */
-  constructor(options = {}) {
+  options: ToolbarOptions;
+
+  constructor(options: Partial<ToolbarOptions> = {}) {
     this.options = {
       viewMode: VIEW_MODES.SCATTER_ALL,
       hasDensityData: false,
@@ -38,11 +42,7 @@ export default class Toolbar {
     };
   }
 
-  /**
-   * Render toolbar HTML
-   * @returns {string} HTML string
-   */
-  render() {
+  render(): string {
     const { viewMode, hasDensityData, isDenseGroupEnabled, showSettings, showFullscreen } = this.options;
 
     const densityBtnDisabled = !hasDensityData || !isDenseGroupEnabled;
@@ -50,7 +50,7 @@ export default class Toolbar {
       ? t("toolbar.density_disabled_title")
       : t("toolbar.density_title");
 
-    const activeClass = (mode) => viewMode === mode ? "blv-active" : "";
+    const activeClass = (mode: ViewMode) => viewMode === mode ? "blv-active" : "";
 
     return `
       <div class="inline-flex bg-gray-200 rounded-md p-0.5 gap-0.5">
@@ -94,18 +94,14 @@ export default class Toolbar {
     `;
   }
 
-  /**
-   * Bind event listeners to a container
-   * @param {HTMLElement} container - Container element with toolbar
-   */
-  bindEvents(container) {
+  bindEvents(container: HTMLElement) {
     const { onViewModeChange, onSettingsClick, onFullscreenClick } = this.options;
 
     // View mode buttons
     container.querySelectorAll("[data-view-mode]").forEach(btn => {
       btn.addEventListener("click", (e) => {
-        if (e.currentTarget.disabled) return;
-        const mode = e.currentTarget.dataset.viewMode;
+        if ((e.currentTarget as HTMLButtonElement).disabled) return;
+        const mode = (e.currentTarget as HTMLElement).dataset.viewMode as ViewMode;
         if (onViewModeChange) {
           onViewModeChange(mode);
         }
@@ -125,26 +121,18 @@ export default class Toolbar {
     }
   }
 
-  /**
-   * Update toolbar state
-   * @param {HTMLElement} container - Container element with toolbar
-   * @param {Object} state - New state
-   * @param {string} state.viewMode - Current view mode
-   * @param {boolean} state.hasDensityData - Whether density data is available
-   * @param {boolean} state.isDenseGroupEnabled - Whether dense group is enabled
-   */
-  updateState(container, state) {
+  updateState(container: HTMLElement, state: Partial<ToolbarOptions>) {
     const { viewMode, hasDensityData, isDenseGroupEnabled } = { ...this.options, ...state };
 
     container.querySelectorAll("[data-view-mode]").forEach(btn => {
-      const isActive = btn.dataset.viewMode === viewMode;
+      const isActive = (btn as HTMLElement).dataset.viewMode === viewMode;
       btn.classList.toggle("blv-active", isActive);
 
       // Update density button disabled state
-      if (btn.dataset.viewMode === VIEW_MODES.SCATTER_DENSITY) {
+      if ((btn as HTMLElement).dataset.viewMode === VIEW_MODES.SCATTER_DENSITY) {
         const isDisabled = !hasDensityData || !isDenseGroupEnabled;
-        btn.disabled = isDisabled;
-        btn.title = isDisabled ? t("toolbar.density_disabled_title") : t("toolbar.density_title");
+        (btn as HTMLButtonElement).disabled = isDisabled;
+        (btn as HTMLElement).title = isDisabled ? t("toolbar.density_disabled_title") : t("toolbar.density_title");
       }
     });
 

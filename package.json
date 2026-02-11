@@ -2,21 +2,25 @@
   "private": true,
   "packageManager": "pnpm@10.28.2",
   "scripts": {
-    "build:site:js": "node build.mjs site",
+    "build:shared": "node build.mjs shared",
+    "build:site:js": "pnpm run build:shared && node build.mjs site",
     "build:site:css": "tailwindcss -i js/app.css -o public/app.css --minify",
     "build:site": "pnpm run build:site:js && pnpm run build:site:css",
-    "build:dist:js": "node build.mjs dist",
+    "build:dist:js": "pnpm run build:shared && node build.mjs dist",
     "build:dist:css": "tailwindcss -i js/app.css -o lib/broadlistening/viewer/assets/app.css --minify",
     "build:dist": "pnpm run build:dist:js && pnpm run build:dist:css",
-    "build": "pnpm run build:site && pnpm run build:dist"
+    "build": "pnpm run build:shared && pnpm run build:site && pnpm run build:dist",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@ruby/3.4-wasm-wasi": "2.8.1",
     "@ruby/wasm-wasi": "2.8.1",
     "@tailwindcss/cli": "^4.1.18",
+    "@types/plotly.js": "^2.33.0",
     "esbuild": "^0.24.0",
     "plotly.js-dist-min": "2.35.0",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.7.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

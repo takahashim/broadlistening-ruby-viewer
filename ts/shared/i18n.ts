@@ -9,16 +9,15 @@
 
 /**
  * Get all broadlistening_view messages from DOM
- * @returns {Object} Messages object
  */
-const getViewMessages = () => {
+const getViewMessages = (): Record<string, any> => {
   const element = document.getElementById("broadlistening-view-i18n");
-  if (!element || !element.dataset.messages) {
+  if (!element || !(element as HTMLElement).dataset.messages) {
     return {};
   }
 
   try {
-    return JSON.parse(element.dataset.messages);
+    return JSON.parse((element as HTMLElement).dataset.messages!);
   } catch (e) {
     console.error("[broadlistening_view] Failed to parse i18n messages:", e);
     return {};
@@ -27,15 +26,12 @@ const getViewMessages = () => {
 
 /**
  * Get a translated message by key
- * @param {string} key - Dot-separated key (e.g., "toolbar.all")
- * @param {Object} interpolations - Values to interpolate (e.g., { count: 5 })
- * @returns {string} Translated message or key if not found
  */
-export const t = (key, interpolations = {}) => {
+export const t = (key: string, interpolations: Record<string, any> = {}): string => {
   const messages = getViewMessages();
 
   // Navigate to the nested key
-  let value = messages;
+  let value: any = messages;
   for (const part of key.split(".")) {
     if (value && typeof value === "object") {
       value = value[part];
@@ -53,7 +49,7 @@ export const t = (key, interpolations = {}) => {
 
   // Handle interpolations (e.g., %{count})
   if (typeof value === "string" && Object.keys(interpolations).length > 0) {
-    return value.replace(/%\{(\w+)\}/g, (match, name) => {
+    return value.replace(/%\{(\w+)\}/g, (match: string, name: string) => {
       return interpolations[name] !== undefined ? interpolations[name] : match;
     });
   }

@@ -5,8 +5,30 @@ import { escapeHtml } from "./decidim_core_shim";
 import { t } from "./i18n";
 import { wrapText, wrapTextWithLimit } from "./utils";
 
+interface ScatterChartOptions {
+  targetLevel: number;
+  selectedClusterId: string | null;
+  filteredArgumentIds: Set<string> | null;
+  filteredClusterIds: Set<string> | null;
+  maxLevel: number | null;
+  clusterColorMap?: Map<string, string>;
+  clusterById?: Map<string, any>;
+  childrenByParent?: Map<string, any[]>;
+  clustersByLevel?: Map<number, any[]>;
+  argumentsByClusterId?: Map<string, any[]>;
+}
+
 export default class ScatterChart {
-  constructor(container, data, options = {}) {
+  container: HTMLElement;
+  arguments: any[];
+  clusters: any[];
+  options: ScatterChartOptions;
+  clusterById: Map<string, any>;
+  childrenByParent: Map<string, any[]>;
+  clustersByLevel: Map<number, any[]>;
+  argumentsByClusterId: Map<string, any[]>;
+
+  constructor(container: HTMLElement, data: any, options: Partial<ScatterChartOptions> = {}) {
     this.container = container;
     this.arguments = data.arguments || [];
     this.clusters = data.clusters || [];
@@ -14,26 +36,26 @@ export default class ScatterChart {
       targetLevel: 1,
       selectedClusterId: null,
       filteredArgumentIds: null,
-      filteredClusterIds: null, // Set of cluster IDs to show in density mode
-      maxLevel: null, // Max level for density mode
+      filteredClusterIds: null,
+      maxLevel: null,
       ...options
-    };
+    } as ScatterChartOptions;
 
     // Use pre-built indexes if provided, otherwise build them
     if (this.options.clusterById) {
       this.clusterById = this.options.clusterById;
-      this.childrenByParent = this.options.childrenByParent;
-      this.clustersByLevel = this.options.clustersByLevel;
-      this.argumentsByClusterId = this.options.argumentsByClusterId;
+      this.childrenByParent = this.options.childrenByParent!;
+      this.clustersByLevel = this.options.clustersByLevel!;
+      this.argumentsByClusterId = this.options.argumentsByClusterId!;
     } else {
+      this.clusterById = new Map();
+      this.childrenByParent = new Map();
+      this.clustersByLevel = new Map();
+      this.argumentsByClusterId = new Map();
       this.buildIndexes();
     }
   }
 
-  /**
-   * Build cluster and argument indexes for O(1) lookups
-   * Called only when indexes are not provided via options
-   */
   buildIndexes() {
     this.clusterById = new Map(this.clusters.map(c => [c.id, c]));
     this.childrenByParent = new Map();
@@ -43,13 +65,13 @@ export default class ScatterChart {
         if (!this.childrenByParent.has(cluster.parent)) {
           this.childrenByParent.set(cluster.parent, []);
         }
-        this.childrenByParent.get(cluster.parent).push(cluster);
+        this.childrenByParent.get(cluster.parent)!.push(cluster);
       }
       const level = cluster.level ?? 0;
       if (!this.clustersByLevel.has(level)) {
         this.clustersByLevel.set(level, []);
       }
-      this.clustersByLevel.get(level).push(cluster);
+      this.clustersByLevel.get(level)!.push(cluster);
     }
 
     this.argumentsByClusterId = new Map();
@@ -58,7 +80,7 @@ export default class ScatterChart {
         if (!this.argumentsByClusterId.has(clusterId)) {
           this.argumentsByClusterId.set(clusterId, []);
         }
-        this.argumentsByClusterId.get(clusterId).push(arg);
+        this.argumentsByClusterId.get(clusterId)!.push(arg);
       }
     }
   }
@@ -79,19 +101,15 @@ export default class ScatterChart {
       scrollZoom: true
     };
 
-    Plotly.newPlot(this.container, [trace], layout, config);
+    Plotly.newPlot(this.container as any, [trace], layout, config);
   }
 
-  /**
-   * Build trace data for Plotly
-   * @returns {Object} Plotly trace object
-   */
   buildTrace() {
     const colors = this.getPointColors();
 
     return {
-      x: this.arguments.map(a => a.x),
-      y: this.arguments.map(a => a.y),
+      x: this.arguments.map((a: any) => a.x),
+      y: this.arguments.map((a: any) => a.y),
       mode: "markers",
       type: "scattergl",
       marker: {
@@ -99,7 +117,7 @@ export default class ScatterChart {
         size: 8,
         opacity: 0.7
       },
-      text: this.arguments.map(a => this.formatHoverText(a)),
+      text: this.arguments.map((a: any) => this.formatHoverText(a)),
       hoverinfo: "text",
       hovertemplate: "%{text}<extra></extra>",
       hoverlabel: {
@@ -111,10 +129,6 @@ export default class ScatterChart {
     };
   }
 
-  /**
-   * Build layout for Plotly
-   * @returns {Object} Plotly layout object
-   */
   buildLayout() {
     const annotations = this.getClusterAnnotations();
 
@@ -141,37 +155,28 @@ export default class ScatterChart {
     };
   }
 
-  /**
-   * Get cluster ID at specific level from an argument's cluster_ids
-   * Cluster IDs follow the format "${level}_${index}" (e.g., "1_0", "2_3")
-   * @param {string[]} clusterIds - Array of cluster IDs
-   * @param {number} level - Target level
-   * @returns {string|undefined} Cluster ID at the specified level
-   */
-  getClusterIdAtLevel(clusterIds, level) {
+  getClusterIdAtLevel(clusterIds: string[], level: number): string | undefined {
     return clusterIds.find(id => id.startsWith(`${level}_`));
   }
 
-  getPointColors() {
+  getPointColors(): string[] {
     const { targetLevel, selectedClusterId, filteredArgumentIds, filteredClusterIds, maxLevel, clusterColorMap } = this.options;
-    const colorOf = (id) => clusterColorMap?.get(id) || getClusterColor(id);
+    const colorOf = (id: string) => clusterColorMap?.get(id) || getClusterColor(id);
 
     // Pre-compute child cluster IDs for selected cluster (if any)
-    let childIds = null;
+    let childIds: Set<string> | null = null;
     if (selectedClusterId) {
       const childClusters = this.childrenByParent.get(selectedClusterId) || [];
       childIds = new Set(childClusters.map(c => c.id));
     }
 
     return this.arguments.map(arg => {
-      // Check if argument is filtered out
       if (filteredArgumentIds && !filteredArgumentIds.has(arg.arg_id)) {
         return INACTIVE_COLOR;
       }
 
       const clusterIds = arg.cluster_ids || [];
 
-      // Density mode: color by maxLevel cluster, filter by filteredClusterIds
       if (filteredClusterIds && maxLevel !== null) {
         const deepestClusterId = this.getClusterIdAtLevel(clusterIds, maxLevel);
         if (!deepestClusterId || !filteredClusterIds.has(deepestClusterId)) {
@@ -180,17 +185,14 @@ export default class ScatterChart {
         return colorOf(deepestClusterId);
       }
 
-      // If a cluster is selected, show children of that cluster
       if (selectedClusterId && childIds) {
-        // Check if this point belongs to one of the child clusters
-        const childId = clusterIds.find(id => childIds.has(id));
+        const childId = clusterIds.find((id: string) => childIds!.has(id));
         if (childId) {
           return colorOf(childId);
         }
         return INACTIVE_COLOR;
       }
 
-      // Default: color by target level cluster
       const clusterId = this.getClusterIdAtLevel(clusterIds, targetLevel);
       if (!clusterId) {
         return INACTIVE_COLOR;
@@ -200,10 +202,7 @@ export default class ScatterChart {
     });
   }
 
-  /**
-   * Calculate centroid for a set of points
-   */
-  calculateCentroid(points) {
+  calculateCentroid(points: any[]): { x: number; y: number } | null {
     if (points.length === 0) return null;
     const sumX = points.reduce((acc, p) => acc + p.x, 0);
     const sumY = points.reduce((acc, p) => acc + p.y, 0);
@@ -216,17 +215,14 @@ export default class ScatterChart {
   getClusterAnnotations() {
     const { targetLevel, selectedClusterId, filteredClusterIds, maxLevel } = this.options;
 
-    let clustersToShow;
+    let clustersToShow: any[];
 
     if (filteredClusterIds && maxLevel !== null) {
-      // Density mode: show only filtered clusters at maxLevel
       const maxLevelClusters = this.clustersByLevel.get(maxLevel) || [];
       clustersToShow = maxLevelClusters.filter(c => filteredClusterIds.has(c.id));
     } else if (selectedClusterId) {
-      // Show children of selected cluster
       clustersToShow = this.childrenByParent.get(selectedClusterId) || [];
     } else {
-      // Show target level clusters
       clustersToShow = this.clustersByLevel.get(targetLevel) || [];
     }
 
@@ -236,7 +232,7 @@ export default class ScatterChart {
         return points && points.length > 0;
       })
       .map(cluster => {
-        const points = this.argumentsByClusterId.get(cluster.id);
+        const points = this.argumentsByClusterId.get(cluster.id)!;
         const centroid = this.calculateCentroid(points);
 
         if (!centroid) return null;
@@ -259,19 +255,16 @@ export default class ScatterChart {
       .filter(a => a !== null);
   }
 
-  formatHoverText(argument) {
-    const lines = [];
+  formatHoverText(argument: any): string {
+    const lines: string[] = [];
 
-    // Add argument text (with wrapping, escaped for HTML safety)
     const text = escapeHtml(argument.argument || "");
     const wrapped = wrapTextWithLimit(text, 30);
     lines.push(wrapped);
 
-    // Add cluster info based on current view
     const { selectedClusterId, targetLevel, filteredClusterIds, maxLevel } = this.options;
 
     if (filteredClusterIds && maxLevel !== null) {
-      // Density mode: show maxLevel cluster label
       const clusterId = this.getClusterIdAtLevel(argument.cluster_ids || [], maxLevel);
       if (clusterId) {
         const cluster = this.clusterById.get(clusterId);
@@ -280,11 +273,10 @@ export default class ScatterChart {
         }
       }
     } else if (selectedClusterId) {
-      // Show child cluster label
       const childClusters = this.childrenByParent.get(selectedClusterId) || [];
       const childIds = new Set(childClusters.map(c => c.id));
       const clusterIds = argument.cluster_ids || [];
-      const childId = clusterIds.find(id => childIds.has(id));
+      const childId = clusterIds.find((id: string) => childIds.has(id));
       if (childId) {
         const cluster = this.clusterById.get(childId);
         if (cluster) {
@@ -292,7 +284,6 @@ export default class ScatterChart {
         }
       }
     } else {
-      // Default: show target level cluster label
       const clusterIds = argument.cluster_ids || [];
       const clusterId = this.getClusterIdAtLevel(clusterIds, targetLevel);
       if (clusterId) {
@@ -306,12 +297,7 @@ export default class ScatterChart {
     return lines.join("<br>");
   }
 
-  /**
-   * Update chart options and re-render
-   * Uses Plotly.react for smoother updates (preserves zoom/pan state)
-   * @param {Object} newOptions - New options to merge
-   */
-  update(newOptions) {
+  update(newOptions: Partial<ScatterChartOptions>) {
     this.options = { ...this.options, ...newOptions };
 
     if (this.arguments.length === 0) {
@@ -321,13 +307,10 @@ export default class ScatterChart {
     const trace = this.buildTrace();
     const layout = this.buildLayout();
 
-    Plotly.react(this.container, [trace], layout);
+    Plotly.react(this.container as any, [trace], layout);
   }
 
-  /**
-   * Destroy the chart
-   */
   destroy() {
-    Plotly.purge(this.container);
+    Plotly.purge(this.container as any);
   }
 }

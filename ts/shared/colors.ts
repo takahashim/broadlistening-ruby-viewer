@@ -1,7 +1,7 @@
 // Color palette for cluster visualization
 // Based on cluster-view color scheme
 
-export const CLUSTER_COLORS = [
+export const CLUSTER_COLORS: string[] = [
   "#7ac943", // green
   "#3fa9f5", // blue
   "#ff7997", // pink
@@ -39,10 +39,8 @@ export const INACTIVE_COLOR = "rgba(200, 200, 200, 0.3)";
 
 /**
  * Get color for a cluster based on its ID
- * @param {string} clusterId - Cluster ID like "1_0", "1_1", etc.
- * @returns {string} Hex color string
  */
-export function getClusterColor(clusterId) {
+export function getClusterColor(clusterId: string): string {
   if (!clusterId) return INACTIVE_COLOR;
 
   // Extract index from cluster ID (e.g., "1_0" -> 0, "1_5" -> 5)
@@ -57,9 +55,7 @@ export function getClusterColor(clusterId) {
 
 /**
  * Get color by index
- * @param {number} index - Color index
- * @returns {string} Hex color string
  */
-export function getColorByIndex(index) {
+export function getColorByIndex(index: number): string {
   return CLUSTER_COLORS[index % CLUSTER_COLORS.length];
 }

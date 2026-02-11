@@ -35,5 +35,12 @@
   "cluster": {
     "click_to_expand": "クリックしてサブクラスターを表示",
     "back_to_all": "全てのクラスターに戻る"
+  },
+  "template": {
+    "analyzed_comments": "%{count}件のコメントを分析",
+    "overview": "概要",
+    "chart_help": "ドラッグで移動、スクロールでズームできます。ツリーマップではクラスタをクリックして詳細を確認できます。",
+    "cluster_overview": "クラスター概要",
+    "cluster_count": "%{count}件の意見"
   }
 }

@@ -1,23 +1,29 @@
 // Fullscreen Modal component for Broadlistening visualization
 import { icon, escapeHtml } from "./decidim_core_shim";
 import { t } from "./i18n";
-import Toolbar, { VIEW_MODES } from "./toolbar";
+import Toolbar, { VIEW_MODES, type ViewMode } from "./toolbar";
+
+interface FullscreenModalOptions {
+  viewMode: ViewMode;
+  hasDensityData: boolean;
+  isDenseGroupEnabled: boolean;
+  onViewModeChange: ((mode: ViewMode) => void) | null;
+  onClose: (() => void) | null;
+  renderChart: ((container: HTMLElement) => void) | null;
+  renderBreadcrumb: ((container: HTMLElement) => void) | null;
+}
 
 /**
  * Fullscreen modal for chart visualization
  */
 export default class FullscreenModal {
-  /**
-   * @param {Object} options
-   * @param {string} options.viewMode - Current view mode
-   * @param {boolean} options.hasDensityData - Whether density data is available
-   * @param {boolean} options.isDenseGroupEnabled - Whether dense group is enabled
-   * @param {Function} options.onViewModeChange - Callback when view mode changes
-   * @param {Function} options.onClose - Callback when modal is closed
-   * @param {Function} options.renderChart - Callback to render chart in container
-   * @param {Function} options.renderBreadcrumb - Callback to render breadcrumb content
-   */
-  constructor(options = {}) {
+  options: FullscreenModalOptions;
+  modal: HTMLElement | null;
+  isOpen: boolean;
+  _escapeHandler: ((e: KeyboardEvent) => void) | null;
+  toolbar: Toolbar | null;
+
+  constructor(options: Partial<FullscreenModalOptions> = {}) {
     this.options = {
       viewMode: VIEW_MODES.SCATTER_ALL,
       hasDensityData: false,
@@ -35,9 +41,6 @@ export default class FullscreenModal {
     this.toolbar = null;
   }
 
-  /**
-   * Open the fullscreen modal
-   */
   open() {
     if (this.isOpen) return;
     this.isOpen = true;
@@ -47,9 +50,9 @@ export default class FullscreenModal {
       viewMode: this.options.viewMode,
       hasDensityData: this.options.hasDensityData,
       isDenseGroupEnabled: this.options.isDenseGroupEnabled,
-      showSettings: false, // Settings not shown in fullscreen header
-      showFullscreen: false, // Already in fullscreen
-      onViewModeChange: (mode) => {
+      showSettings: false,
+      showFullscreen: false,
+      onViewModeChange: (mode: ViewMode) => {
         if (this.options.onViewModeChange) {
           this.options.onViewModeChange(mode);
         }
@@ -80,23 +83,20 @@ export default class FullscreenModal {
     this.renderChart();
   }
 
-  /**
-   * Bind event listeners
-   */
   bindEvents() {
     if (!this.modal) return;
 
     // Bind toolbar events
-    const headerContainer = this.modal.querySelector('[data-blv="fullscreen-header"]');
-    this.toolbar.bindEvents(headerContainer);
+    const headerContainer = this.modal.querySelector('[data-blv="fullscreen-header"]') as HTMLElement;
+    this.toolbar!.bindEvents(headerContainer);
 
     // Close button
-    this.modal.querySelector("[data-action='close']").addEventListener("click", () => {
+    this.modal.querySelector("[data-action='close']")!.addEventListener("click", () => {
       this.close();
     });
 
     // Escape key
-    this._escapeHandler = (e) => {
+    this._escapeHandler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         this.close();
       }
@@ -104,27 +104,16 @@ export default class FullscreenModal {
     document.addEventListener("keydown", this._escapeHandler);
   }
 
-  /**
-   * Get the chart container element
-   * @returns {HTMLElement|null}
-   */
-  getChartContainer() {
+  getChartContainer(): HTMLElement | null {
     if (!this.modal) return null;
     return this.modal.querySelector('[data-blv="chart-plot"]');
   }
 
-  /**
-   * Get the breadcrumb container element
-   * @returns {HTMLElement|null}
-   */
-  getBreadcrumbContainer() {
+  getBreadcrumbContainer(): HTMLElement | null {
     if (!this.modal) return null;
     return this.modal.querySelector('[data-blv="fullscreen-breadcrumb"]');
   }
 
-  /**
-   * Render chart using callback
-   */
   renderChart() {
     if (!this.modal || !this.options.renderChart) return;
     const container = this.getChartContainer();
@@ -134,9 +123,6 @@ export default class FullscreenModal {
     }
   }
 
-  /**
-   * Render breadcrumb using callback
-   */
   renderBreadcrumb() {
     if (!this.modal || !this.options.renderBreadcrumb) return;
     const container = this.getBreadcrumbContainer();
@@ -145,20 +131,13 @@ export default class FullscreenModal {
     }
   }
 
-  /**
-   * Update toolbar state
-   * @param {Object} state - New state
-   */
-  updateToolbarState(state) {
+  updateToolbarState(state: Record<string, any>) {
     if (!this.modal || !this.toolbar) return;
-    const headerContainer = this.modal.querySelector('[data-blv="fullscreen-header"]');
+    const headerContainer = this.modal.querySelector('[data-blv="fullscreen-header"]') as HTMLElement;
     this.toolbar.updateState(headerContainer, state);
     Object.assign(this.options, state);
   }
 
-  /**
-   * Close the modal
-   */
   close() {
     if (!this.isOpen) return;
     this.isOpen = false;

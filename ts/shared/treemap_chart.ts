@@ -18,8 +18,21 @@ const TREEMAP_COLORS = [
   "#f1e4d6"  // cream
 ];
 
+interface TreemapChartOptions {
+  level: string;
+  onLevelChange: ((level: string) => void) | null;
+  filteredArgumentIds: Set<string> | null;
+  filteredClusterIds: Set<string> | null;
+}
+
 export default class TreemapChart {
-  constructor(container, data, options = {}) {
+  container: HTMLElement;
+  arguments: any[];
+  clusters: any[];
+  options: TreemapChartOptions;
+  maxLevel: number;
+
+  constructor(container: HTMLElement, data: any, options: Partial<TreemapChartOptions> = {}) {
     this.container = container;
     this.arguments = data.arguments || [];
     this.clusters = data.clusters || [];
@@ -31,7 +44,7 @@ export default class TreemapChart {
       ...options
     };
 
-    this.maxLevel = Math.max(...this.clusters.map(c => c.level || 0), 0);
+    this.maxLevel = Math.max(...this.clusters.map((c: any) => c.level || 0), 0);
   }
 
   render() {
@@ -48,9 +61,8 @@ export default class TreemapChart {
       locale: "ja"
     };
 
-    Plotly.newPlot(this.container, [treemapData], layout, config).then(() => {
-      // Add click event listener for zooming
-      this.container.on("plotly_click", (event) => {
+    Plotly.newPlot(this.container as any, [treemapData], layout, config).then(() => {
+      (this.container as any).on("plotly_click", (event: any) => {
         if (event.points && event.points[0]) {
           const clickedId = event.points[0].data.ids[event.points[0].pointNumber];
           if (clickedId && this.options.onLevelChange) {
@@ -59,9 +71,8 @@ export default class TreemapChart {
         }
       });
 
-      // Darken pathbar on hover for visibility
-      this.container.on("plotly_hover", () => this.darkenPathbar());
-      this.container.on("plotly_unhover", () => this.darkenPathbar());
+      (this.container as any).on("plotly_hover", () => this.darkenPathbar());
+      (this.container as any).on("plotly_unhover", () => this.darkenPathbar());
       this.darkenPathbar();
     });
   }
@@ -71,11 +82,10 @@ export default class TreemapChart {
     const isArgumentFiltering = !!filteredArgumentIds;
     const isClusterFiltering = !!filteredClusterIds;
 
-    // Convert clusters to treemap nodes
-    const clusterNodes = this.clusters.map((cluster, index) => {
+    const clusterNodes = this.clusters.map((cluster: any, index: number) => {
       const isFiltered = isClusterFiltering &&
                          cluster.level === this.maxLevel &&
-                         !filteredClusterIds.has(cluster.id);
+                         !filteredClusterIds!.has(cluster.id);
 
       return {
         id: cluster.id,
@@ -87,18 +97,16 @@ export default class TreemapChart {
       };
     });
 
-    // Convert arguments to leaf nodes
-    const argumentNodes = this.arguments.map(arg => {
+    const argumentNodes = this.arguments.map((arg: any) => {
       const parentClusterId = arg.cluster_ids[arg.cluster_ids.length - 1];
 
       let isFiltered = false;
-      if (isArgumentFiltering && !filteredArgumentIds.has(arg.arg_id)) {
+      if (isArgumentFiltering && !filteredArgumentIds!.has(arg.arg_id)) {
         isFiltered = true;
       }
       if (isClusterFiltering) {
-        // Cluster IDs follow the format "${level}_${index}" (e.g., "1_0", "2_3")
-        const deepestClusterId = arg.cluster_ids.find(id => id.startsWith(`${this.maxLevel}_`));
-        if (deepestClusterId && !filteredClusterIds.has(deepestClusterId)) {
+        const deepestClusterId = arg.cluster_ids.find((id: string) => id.startsWith(`${this.maxLevel}_`));
+        if (deepestClusterId && !filteredClusterIds!.has(deepestClusterId)) {
           isFiltered = true;
         }
       }
@@ -181,7 +189,7 @@ export default class TreemapChart {
     }
   }
 
-  getElementColor(elem) {
+  getElementColor(elem: Element): string {
     if (!elem) return "";
     try {
       const style = elem.getAttribute("style") || "";
@@ -192,7 +200,7 @@ export default class TreemapChart {
     }
   }
 
-  darkenElement(elem, originalColor) {
+  darkenElement(elem: Element, originalColor: string) {
     if (!elem || !originalColor) return;
 
     const currentColor = this.getElementColor(elem);
@@ -200,8 +208,8 @@ export default class TreemapChart {
 
     const darkenedColor = originalColor.replace(
       /rgb\((\d+),\s*(\d+),\s*(\d+)\)/,
-      (match, r, g, b) => {
-        const darken = (val) => Math.max(0, parseInt(val) - 30);
+      (_match: string, r: string, g: string, b: string) => {
+        const darken = (val: string) => Math.max(0, parseInt(val) - 30);
         return `rgb(${darken(r)}, ${darken(g)}, ${darken(b)})`;
       }
     );
@@ -211,26 +219,18 @@ export default class TreemapChart {
     elem.setAttribute("style", newStyle);
   }
 
-  /**
-   * Update chart options and re-render
-   * @param {Object} newOptions - New options to merge
-   */
-  update(newOptions) {
+  update(newOptions: Partial<TreemapChartOptions>) {
     this.options = { ...this.options, ...newOptions };
 
-    // Use react for smoother updates
     const treemapData = this.buildTreemapData();
     const layout = this.buildLayout();
 
-    Plotly.react(this.container, [treemapData], layout).then(() => {
+    Plotly.react(this.container as any, [treemapData], layout).then(() => {
       this.darkenPathbar();
     });
   }
 
-  /**
-   * Destroy the chart
-   */
   destroy() {
-    Plotly.purge(this.container);
+    Plotly.purge(this.container as any);
   }
 }

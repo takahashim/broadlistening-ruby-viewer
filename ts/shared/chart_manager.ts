@@ -6,12 +6,48 @@ import TreemapChart from "./treemap_chart";
 import { CLUSTER_COLORS } from "./colors";
 import { icon, escapeHtml } from "./decidim_core_shim";
 import { t } from "./i18n";
-import Toolbar, { VIEW_MODES } from "./toolbar";
+import Toolbar, { VIEW_MODES, type ViewMode } from "./toolbar";
 import SettingsDialog from "./settings_dialog";
 import FullscreenModal from "./fullscreen_modal";
 
+interface ChartManagerOptions {
+  defaultChart: ViewMode;
+  showToolbar: boolean;
+}
+
 export default class ChartManager {
-  constructor(container, data, options = {}) {
+  container: HTMLElement;
+  data: any;
+  options: ChartManagerOptions;
+  arguments: any[];
+  clusters: any[];
+  clusterById: Map<string, any>;
+  childrenByParent: Map<string, any[]>;
+  clustersByLevel: Map<number, any[]>;
+  clusterColorMap: Map<string, string>;
+  argumentsByClusterId: Map<string, any[]>;
+  maxLevel: number;
+  hasDensityData: boolean;
+  viewMode: ViewMode;
+  isFullscreen: boolean;
+  selectedClusterId: string | null;
+  treemapLevel: string;
+  maxDensity: number;
+  minValue: number;
+  isDenseGroupEnabled: boolean;
+  scatterChart: ScatterChart | null;
+  treemapChart: TreemapChart | null;
+  toolbar: Toolbar | null;
+  settingsDialog: SettingsDialog | null;
+  fullscreenModal: FullscreenModal | null;
+  toolbarContainer: HTMLElement | null;
+  breadcrumbContainer: HTMLElement | null;
+  chartContainer: HTMLElement | null;
+  clusterGridContainer: HTMLElement | null;
+  clusterOverviewSection: HTMLElement | null;
+  _clusterGridClickHandler: ((e: Event) => void) | null;
+
+  constructor(container: HTMLElement, data: any, options: Partial<ChartManagerOptions> = {}) {
     this.container = container;
     this.data = data;
     this.options = {
@@ -33,13 +69,13 @@ export default class ChartManager {
         if (!this.childrenByParent.has(parentId)) {
           this.childrenByParent.set(parentId, []);
         }
-        this.childrenByParent.get(parentId).push(cluster);
+        this.childrenByParent.get(parentId)!.push(cluster);
       }
       const level = cluster.level ?? 0;
       if (!this.clustersByLevel.has(level)) {
         this.clustersByLevel.set(level, []);
       }
-      this.clustersByLevel.get(level).push(cluster);
+      this.clustersByLevel.get(level)!.push(cluster);
     }
     // Sort children by value descending
     for (const children of this.childrenByParent.values()) {
@@ -61,15 +97,15 @@ export default class ChartManager {
         if (!this.argumentsByClusterId.has(clusterId)) {
           this.argumentsByClusterId.set(clusterId, []);
         }
-        this.argumentsByClusterId.get(clusterId).push(arg);
+        this.argumentsByClusterId.get(clusterId)!.push(arg);
       }
     }
 
     // Calculate max level
-    this.maxLevel = Math.max(...this.clusters.map(c => c.level || 0), 0);
+    this.maxLevel = Math.max(...this.clusters.map((c: any) => c.level || 0), 0);
 
     // Check if density filter is available (clusters have density_rank_percentile)
-    this.hasDensityData = this.clusters.some(c => typeof c.density_rank_percentile === "number");
+    this.hasDensityData = this.clusters.some((c: any) => typeof c.density_rank_percentile === "number");
 
     // State
     this.viewMode = VIEW_MODES.SCATTER_ALL;
@@ -101,6 +137,8 @@ export default class ChartManager {
     this.breadcrumbContainer = null;
     this.chartContainer = null;
     this.clusterGridContainer = null;
+    this.clusterOverviewSection = null;
+    this._clusterGridClickHandler = null;
 
     this.init();
   }
@@ -140,39 +178,38 @@ export default class ChartManager {
   }
 
   renderToolbar() {
-    // Create toolbar instance
     this.toolbar = new Toolbar({
       viewMode: this.viewMode,
       hasDensityData: this.hasDensityData,
       isDenseGroupEnabled: this.isDenseGroupEnabled,
       showSettings: this.hasDensityData,
       showFullscreen: true,
-      onViewModeChange: (mode) => this.switchViewMode(mode),
+      onViewModeChange: (mode: ViewMode) => this.switchViewMode(mode),
       onSettingsClick: () => this.openSettingsDialog(),
       onFullscreenClick: () => this.toggleFullscreen()
     });
 
-    this.toolbarContainer.innerHTML = this.toolbar.render();
-    this.toolbar.bindEvents(this.toolbarContainer);
+    this.toolbarContainer!.innerHTML = this.toolbar.render();
+    this.toolbar.bindEvents(this.toolbarContainer!);
   }
 
   renderBreadcrumb() {
     const isScatterMode = this.viewMode === VIEW_MODES.SCATTER_ALL || this.viewMode === VIEW_MODES.SCATTER_DENSITY;
     if (!this.selectedClusterId || !isScatterMode) {
-      this.breadcrumbContainer.innerHTML = "";
-      this.breadcrumbContainer.style.display = "none";
+      this.breadcrumbContainer!.innerHTML = "";
+      this.breadcrumbContainer!.style.display = "none";
       return;
     }
 
     const path = this.buildClusterPath(this.selectedClusterId);
     if (path.length === 0) {
-      this.breadcrumbContainer.innerHTML = "";
-      this.breadcrumbContainer.style.display = "none";
+      this.breadcrumbContainer!.innerHTML = "";
+      this.breadcrumbContainer!.style.display = "none";
       return;
     }
 
-    this.breadcrumbContainer.style.display = "block";
-    this.breadcrumbContainer.innerHTML = `
+    this.breadcrumbContainer!.style.display = "block";
+    this.breadcrumbContainer!.innerHTML = `
       <div class="flex items-center gap-2 flex-wrap">
         <span class="text-xs font-medium text-sky-700">${escapeHtml(t("breadcrumb.viewing"))}</span>
         <nav class="flex items-center gap-1 flex-wrap">
@@ -191,19 +228,15 @@ export default class ChartManager {
     `;
 
     // Add click handlers for breadcrumb navigation
-    this.breadcrumbContainer.querySelectorAll("[data-cluster-id]").forEach(btn => {
+    this.breadcrumbContainer!.querySelectorAll("[data-cluster-id]").forEach(btn => {
       btn.addEventListener("click", (e) => {
-        const clusterId = e.currentTarget.dataset.clusterId;
+        const clusterId = (e.currentTarget as HTMLElement).dataset.clusterId;
         this.navigateToCluster(clusterId || null);
       });
     });
   }
 
-  /**
-   * Render breadcrumb into a specific container
-   * @param {HTMLElement} container - Target container
-   */
-  renderBreadcrumbInto(container) {
+  renderBreadcrumbInto(container: HTMLElement) {
     const isScatterAllMode = this.viewMode === VIEW_MODES.SCATTER_ALL;
 
     if (!this.selectedClusterId || !isScatterAllMode) {
@@ -238,7 +271,7 @@ export default class ChartManager {
     // Add click handlers
     container.querySelectorAll("[data-cluster-id]").forEach(btn => {
       btn.addEventListener("click", (e) => {
-        const clusterId = e.currentTarget.dataset.clusterId;
+        const clusterId = (e.currentTarget as HTMLElement).dataset.clusterId;
         this.selectedClusterId = clusterId || null;
         if (this.fullscreenModal) {
           this.fullscreenModal.renderBreadcrumb();
@@ -249,9 +282,9 @@ export default class ChartManager {
     });
   }
 
-  buildClusterPath(clusterId) {
-    const path = [];
-    let currentId = clusterId;
+  buildClusterPath(clusterId: string): any[] {
+    const path: any[] = [];
+    let currentId: string | null = clusterId;
 
     while (currentId && currentId !== "0") {
       const cluster = this.clusterById.get(currentId);
@@ -268,7 +301,7 @@ export default class ChartManager {
 
   updateToolbarState() {
     if (this.toolbar) {
-      this.toolbar.updateState(this.toolbarContainer, {
+      this.toolbar.updateState(this.toolbarContainer!, {
         viewMode: this.viewMode,
         hasDensityData: this.hasDensityData,
         isDenseGroupEnabled: this.isDenseGroupEnabled
@@ -276,42 +309,37 @@ export default class ChartManager {
     }
   }
 
-  switchViewMode(mode) {
+  switchViewMode(mode: ViewMode) {
     if (this.viewMode === mode) return;
 
     this.viewMode = mode;
     // Reset cluster selection when switching to treemap
     if (mode === VIEW_MODES.TREEMAP) {
       this.selectedClusterId = null;
-      this.renderClusterGrid(); // Reset to top level
+      this.renderClusterGrid();
     }
     this.updateToolbarState();
     this.renderBreadcrumb();
     this.renderChart();
   }
 
-  navigateToCluster(clusterId) {
+  navigateToCluster(clusterId: string | null) {
     this.selectedClusterId = clusterId;
     this.renderBreadcrumb();
     this.renderChart();
     this.renderClusterGrid();
   }
 
-  /**
-   * Render cluster grid based on current selection
-   */
   renderClusterGrid() {
     if (!this.clusterGridContainer) return;
 
-    // Get clusters to display
-    let clustersToShow;
+    let clustersToShow: any[];
     if (this.selectedClusterId) {
       clustersToShow = this.getChildClusters(this.selectedClusterId);
     } else {
       clustersToShow = this.getTopLevelClusters();
     }
 
-    // Render cluster cards
     this.clusterGridContainer.innerHTML = clustersToShow.map((cluster, index) => {
       const color = CLUSTER_COLORS[index % CLUSTER_COLORS.length];
       const hasChildren = this.getChildClusters(cluster.id).length > 0;
@@ -337,32 +365,23 @@ export default class ChartManager {
       `;
     }).join("");
 
-    // Render cluster grid breadcrumb
     this.renderClusterGridBreadcrumb();
-
-    // Rebind click events
     this.bindClusterCardEvents();
   }
 
-  /**
-   * Render breadcrumb navigation for cluster grid section
-   */
   renderClusterGridBreadcrumb() {
     if (!this.clusterOverviewSection) return;
 
-    // Remove existing breadcrumb if any
     const existingBreadcrumb = this.clusterOverviewSection.querySelector('[data-blv="cluster-breadcrumb"]');
     if (existingBreadcrumb) {
       existingBreadcrumb.remove();
     }
 
-    // Don't show breadcrumb if at top level
     if (!this.selectedClusterId) return;
 
     const path = this.buildClusterPath(this.selectedClusterId);
     if (path.length === 0) return;
 
-    // Create breadcrumb element
     const breadcrumbEl = document.createElement("div");
     breadcrumbEl.dataset.blv = "cluster-breadcrumb";
     breadcrumbEl.className = "mb-4 px-4 py-3 bg-slate-50 rounded-lg border border-slate-200";
@@ -381,14 +400,12 @@ export default class ChartManager {
       </nav>
     `;
 
-    // Insert before the grid
-    this.clusterGridContainer.parentNode.insertBefore(breadcrumbEl, this.clusterGridContainer);
+    this.clusterGridContainer!.parentNode!.insertBefore(breadcrumbEl, this.clusterGridContainer);
 
-    // Bind click events for all navigable elements
     breadcrumbEl.querySelectorAll("[data-navigate-cluster]").forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.preventDefault();
-        const clusterId = e.currentTarget.dataset.navigateCluster;
+        const clusterId = (e.currentTarget as HTMLElement).dataset.navigateCluster;
         this.navigateToCluster(clusterId || null);
         this.renderBreadcrumb();
       });
@@ -396,7 +413,6 @@ export default class ChartManager {
   }
 
   renderChart() {
-    // Destroy existing chart
     if (this.scatterChart) {
       this.scatterChart.destroy();
       this.scatterChart = null;
@@ -406,24 +422,18 @@ export default class ChartManager {
       this.treemapChart = null;
     }
 
-    // Clear container
-    this.chartContainer.innerHTML = '<div data-blv="chart-plot" class="w-full h-[350px] md:h-[500px]"></div>';
-    const plotContainer = this.chartContainer.querySelector('[data-blv="chart-plot"]');
+    this.chartContainer!.innerHTML = '<div data-blv="chart-plot" class="w-full h-[350px] md:h-[500px]"></div>';
+    const plotContainer = this.chartContainer!.querySelector('[data-blv="chart-plot"]') as HTMLElement;
 
     this.renderChartInto(plotContainer);
   }
 
-  /**
-   * Render chart into a specific container
-   * @param {HTMLElement} container - Target container
-   */
-  renderChartInto(container) {
+  renderChartInto(container: HTMLElement) {
     if (this.viewMode === VIEW_MODES.SCATTER_ALL) {
       const chart = new ScatterChart(container, this.data, {
         selectedClusterId: this.selectedClusterId,
         targetLevel: 1,
         clusterColorMap: this.clusterColorMap,
-        // Share pre-built indexes
         clusterById: this.clusterById,
         childrenByParent: this.childrenByParent,
         clustersByLevel: this.clustersByLevel,
@@ -431,21 +441,18 @@ export default class ChartManager {
       });
       chart.render();
 
-      // Store reference if rendering into main container
       if (container === this.chartContainer?.querySelector('[data-blv="chart-plot"]')) {
         this.scatterChart = chart;
       }
     } else if (this.viewMode === VIEW_MODES.SCATTER_DENSITY) {
-      // Get density-filtered clusters
       const { filteredClusterIds } = this.getDenseClusters();
 
       const chart = new ScatterChart(container, this.data, {
-        selectedClusterId: null, // No subcluster navigation in density view
+        selectedClusterId: null,
         targetLevel: this.maxLevel,
         filteredClusterIds: filteredClusterIds,
         maxLevel: this.maxLevel,
         clusterColorMap: this.clusterColorMap,
-        // Share pre-built indexes
         clusterById: this.clusterById,
         childrenByParent: this.childrenByParent,
         clustersByLevel: this.clustersByLevel,
@@ -459,7 +466,7 @@ export default class ChartManager {
     } else if (this.viewMode === VIEW_MODES.TREEMAP) {
       const chart = new TreemapChart(container, this.data, {
         level: this.treemapLevel,
-        onLevelChange: (level) => {
+        onLevelChange: (level: string) => {
           this.treemapLevel = level;
         }
       });
@@ -482,27 +489,26 @@ export default class ChartManager {
   enterFullscreen() {
     this.isFullscreen = true;
 
-    // Create fullscreen modal
     this.fullscreenModal = new FullscreenModal({
       viewMode: this.viewMode,
       hasDensityData: this.hasDensityData,
       isDenseGroupEnabled: this.isDenseGroupEnabled,
-      onViewModeChange: (mode) => {
+      onViewModeChange: (mode: ViewMode) => {
         this.viewMode = mode;
         if (mode === VIEW_MODES.TREEMAP) {
           this.selectedClusterId = null;
         }
-        this.fullscreenModal.updateToolbarState({ viewMode: mode });
-        this.fullscreenModal.renderBreadcrumb();
-        this.fullscreenModal.renderChart();
+        this.fullscreenModal!.updateToolbarState({ viewMode: mode });
+        this.fullscreenModal!.renderBreadcrumb();
+        this.fullscreenModal!.renderChart();
       },
       onClose: () => {
         this.exitFullscreen();
       },
-      renderChart: (container) => {
+      renderChart: (container: HTMLElement) => {
         this.renderChartInto(container);
       },
-      renderBreadcrumb: (container) => {
+      renderBreadcrumb: (container: HTMLElement) => {
         this.renderBreadcrumbInto(container);
       }
     });
@@ -518,27 +524,21 @@ export default class ChartManager {
       this.fullscreenModal = null;
     }
 
-    // Update main toolbar and re-render chart
     this.updateToolbarState();
     this.renderBreadcrumb();
     this.renderChart();
     this.renderClusterGrid();
   }
 
-  /**
-   * Bind click events to cluster cards using event delegation
-   */
   bindClusterCardEvents() {
     if (!this.clusterGridContainer) return;
 
-    // Remove old handler if exists
     if (this._clusterGridClickHandler) {
       this.clusterGridContainer.removeEventListener("click", this._clusterGridClickHandler);
     }
 
-    // Create handler with event delegation
-    this._clusterGridClickHandler = (e) => {
-      const card = e.target.closest("[data-cluster-id]");
+    this._clusterGridClickHandler = (e: Event) => {
+      const card = (e.target as HTMLElement).closest("[data-cluster-id]") as HTMLElement | null;
       if (!card) return;
 
       const clusterId = card.dataset.clusterId;
@@ -551,16 +551,10 @@ export default class ChartManager {
     this.clusterGridContainer.addEventListener("click", this._clusterGridClickHandler);
   }
 
-  /**
-   * Handle cluster card click
-   * @param {string} clusterId - Cluster ID that was clicked
-   */
-  handleClusterCardClick(clusterId) {
-    // Check if this cluster has children
+  handleClusterCardClick(clusterId: string) {
     const children = this.getChildClusters(clusterId);
 
     if (children.length > 0) {
-      // Switch to scatter all mode if not already in a scatter mode
       if (this.viewMode === VIEW_MODES.TREEMAP) {
         this.viewMode = VIEW_MODES.SCATTER_ALL;
         this.updateToolbarState();
@@ -569,43 +563,28 @@ export default class ChartManager {
     }
   }
 
-  /**
-   * Get child clusters of a parent
-   * @param {string} parentId - Parent cluster ID
-   * @returns {Array} Child clusters sorted by value (already sorted)
-   */
-  getChildClusters(parentId) {
+  getChildClusters(parentId: string): any[] {
     return this.childrenByParent.get(parentId) || [];
   }
 
-  /**
-   * Get top-level clusters for display
-   * @returns {Array} Level 1 clusters sorted by value
-   */
-  getTopLevelClusters() {
-    // Root cluster "0" has level 1 children
+  getTopLevelClusters(): any[] {
     return this.childrenByParent.get("0") || [];
   }
 
-  /**
-   * Get density-filtered clusters
-   * @returns {Object} { filtered: Cluster[], filteredClusterIds: Set, isEmpty: boolean }
-   */
   getDenseClusters() {
     if (!this.hasDensityData) {
-      return { filtered: [], filteredClusterIds: new Set(), isEmpty: true };
+      return { filtered: [], filteredClusterIds: new Set<string>(), isEmpty: true };
     }
 
     const deepestLevelClusters = this.clustersByLevel.get(this.maxLevel) || [];
     const filteredDeepestLevelClusters = deepestLevelClusters
-      .filter(c => c.density_rank_percentile <= this.maxDensity)
-      .filter(c => (c.value || 0) >= this.minValue);
+      .filter((c: any) => c.density_rank_percentile <= this.maxDensity)
+      .filter((c: any) => (c.value || 0) >= this.minValue);
 
-    const filteredClusterIds = new Set(filteredDeepestLevelClusters.map(c => c.id));
+    const filteredClusterIds = new Set(filteredDeepestLevelClusters.map((c: any) => c.id));
 
-    // Include non-deepest level clusters
     const filtered = [
-      ...this.clusters.filter(c => c.level !== this.maxLevel),
+      ...this.clusters.filter((c: any) => c.level !== this.maxLevel),
       ...filteredDeepestLevelClusters
     ];
 
@@ -616,22 +595,15 @@ export default class ChartManager {
     };
   }
 
-  /**
-   * Update whether density group button should be enabled
-   */
   updateDenseGroupEnabled() {
     const { isEmpty } = this.getDenseClusters();
     this.isDenseGroupEnabled = !isEmpty;
 
-    // If currently in density mode but no clusters available, switch to all mode
     if (this.viewMode === VIEW_MODES.SCATTER_DENSITY && isEmpty) {
       this.viewMode = VIEW_MODES.SCATTER_ALL;
     }
   }
 
-  /**
-   * Open settings dialog
-   */
   openSettingsDialog() {
     this.settingsDialog = new SettingsDialog({
       maxDensity: this.maxDensity,
@@ -649,7 +621,6 @@ export default class ChartManager {
           });
         }
 
-        // Re-render if in density mode
         if (this.viewMode === VIEW_MODES.SCATTER_DENSITY) {
           this.renderChart();
           if (this.fullscreenModal) {

@@ -23,6 +23,7 @@ module Broadlistening
         js = load_asset("broadlistening-view.js")
         report_json = data.to_json
         i18n_json = load_asset("i18n/ja.json")
+        i18n_hash = JSON.parse(i18n_json)
         overview = data["overview"] || ""
         overview_html = overview.split("\n").reject(&:empty?).map { |p| "<p>#{p}</p>" }.join("\n")
         comment_count = data["comment_num"] || data.dig("config", "comment_num") || 0
@@ -30,6 +31,14 @@ module Broadlistening
           .select { |c| c["level"] == 1 }
           .sort_by { |c| -(c["value"] || 0) }
         cluster_color = ->(index) { CLUSTER_COLORS[index % CLUSTER_COLORS.length] }
+
+        # Render visualization body partial
+        data_id = "report-data"
+        container_id = "chart-container"
+        visualization_body_str = load_asset("shared/_visualization_body.html.erb")
+        visualization_body_html = ERB.new(visualization_body_str, trim_mode: "-").result(binding)
+
+        # Render main template
         template_str = load_asset("template.html.erb")
         ERB.new(template_str, trim_mode: "-").result(binding)
       end
@@ -57,6 +66,7 @@ def render_html(json_str, template_str, css_str, js_str, i18n_str, page_title = 
   js = js_str
   report_json = data.to_json
   i18n_json = i18n_str
+  i18n_hash = JSON.parse(i18n_str)
   overview = data["overview"] || ""
   overview_html = overview.split("\n").reject(&:empty?).map { |p| "<p>#{p}</p>" }.join("\n")
   comment_count = data["comment_num"] || data.dig("config", "comment_num") || 0
@@ -65,5 +75,14 @@ def render_html(json_str, template_str, css_str, js_str, i18n_str, page_title = 
     .sort_by { |c| -(c["value"] || 0) }
   cluster_colors = Broadlistening::Viewer::Renderer::CLUSTER_COLORS
   cluster_color = ->(index) { cluster_colors[index % cluster_colors.length] }
+
+  # Render visualization body partial
+  data_id = "report-data"
+  container_id = "chart-container"
+  visualization_body_str = File.read(
+    File.join(File.expand_path("assets/shared", File.dirname(__FILE__)), "_visualization_body.html.erb")
+  )
+  visualization_body_html = ERB.new(visualization_body_str, trim_mode: "-").result(binding)
+
   ERB.new(template_str, trim_mode: "-").result(binding)
 end

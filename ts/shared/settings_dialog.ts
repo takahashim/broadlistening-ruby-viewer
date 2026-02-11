@@ -3,18 +3,23 @@
 import { icon, escapeHtml, Dialogs } from "./decidim_core_shim";
 import { t } from "./i18n";
 
+interface SettingsDialogOptions {
+  maxDensity: number;
+  minValue: number;
+  onApply: ((settings: { maxDensity: number; minValue: number }) => void) | null;
+  onClose: (() => void) | null;
+}
+
 /**
  * Settings Dialog for density filter configuration
  */
 export default class SettingsDialog {
-  /**
-   * @param {Object} options
-   * @param {number} options.maxDensity - Current max density value (0-1)
-   * @param {number} options.minValue - Current min value
-   * @param {Function} options.onApply - Callback when settings are applied
-   * @param {Function} options.onClose - Callback when dialog is closed
-   */
-  constructor(options = {}) {
+  options: SettingsDialogOptions;
+  element: HTMLElement | null;
+  dialog: Dialogs | null;
+  isOpen: boolean;
+
+  constructor(options: Partial<SettingsDialogOptions> = {}) {
     this.options = {
       maxDensity: 0.2,
       minValue: 5,
@@ -28,9 +33,6 @@ export default class SettingsDialog {
     this.isOpen = false;
   }
 
-  /**
-   * Open the settings dialog
-   */
   open() {
     if (this.isOpen) return;
     this.isOpen = true;
@@ -124,18 +126,16 @@ export default class SettingsDialog {
     this.dialog.open();
   }
 
-  /**
-   * Bind event listeners
-   */
   bindEvents() {
     if (!this.element) return;
 
     // Slider value updates
     this.element.querySelectorAll("input[type='range']").forEach(input => {
       input.addEventListener("input", (e) => {
-        const value = parseFloat(e.target.value);
-        const valueDisplay = e.target.parentElement.querySelector('[data-blv="slider-value"]');
-        if (e.target.dataset.setting === "maxDensity") {
+        const target = e.target as HTMLInputElement;
+        const value = parseFloat(target.value);
+        const valueDisplay = target.parentElement!.querySelector('[data-blv="slider-value"]')!;
+        if (target.dataset.setting === "maxDensity") {
           valueDisplay.textContent = `${Math.round(value * 100)}%`;
         } else {
           valueDisplay.textContent = t("common.items_count", { count: value });
@@ -144,29 +144,23 @@ export default class SettingsDialog {
     });
 
     // Apply button
-    this.element.querySelector("[data-action='apply']").addEventListener("click", () => {
+    this.element.querySelector("[data-action='apply']")!.addEventListener("click", () => {
       this.apply();
     });
   }
 
-  /**
-   * Focus first input element
-   */
   focusFirstInput() {
-    const firstInput = this.element.querySelector("input[type='range']");
+    const firstInput = this.element?.querySelector("input[type='range']") as HTMLElement | null;
     if (firstInput) {
       firstInput.focus();
     }
   }
 
-  /**
-   * Apply settings and close
-   */
   apply() {
     if (!this.element) return;
 
-    const maxDensityInput = this.element.querySelector("[data-setting='maxDensity']");
-    const minValueInput = this.element.querySelector("[data-setting='minValue']");
+    const maxDensityInput = this.element.querySelector("[data-setting='maxDensity']") as HTMLInputElement;
+    const minValueInput = this.element.querySelector("[data-setting='minValue']") as HTMLInputElement;
 
     const newSettings = {
       maxDensity: parseFloat(maxDensityInput.value),
@@ -177,12 +171,9 @@ export default class SettingsDialog {
       this.options.onApply(newSettings);
     }
 
-    this.dialog.close();
+    this.dialog!.close();
   }
 
-  /**
-   * Handle dialog close (called by a11y-dialog-component)
-   */
   handleClose() {
     this.destroy();
 
@@ -191,17 +182,11 @@ export default class SettingsDialog {
     }
   }
 
-  /**
-   * Close the dialog
-   */
   close() {
     if (!this.isOpen || !this.dialog) return;
     this.dialog.close();
   }
 
-  /**
-   * Destroy dialog and clean up
-   */
   destroy() {
     this.isOpen = false;
 

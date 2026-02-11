@@ -1,4 +1,4 @@
-import ChartManager from "../js/chart_manager";
+import ChartManager from "../js/shared/chart_manager";
 import i18nMessages from "../lib/broadlistening/viewer/assets/i18n/ja.json";
 import renderRb from "../lib/broadlistening/viewer/renderer.rb";
 import templateErb from "../lib/broadlistening/viewer/assets/template.html.erb";

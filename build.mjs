@@ -1,12 +1,37 @@
 import * as esbuild from "esbuild";
-import { copyFile } from "fs/promises";
+import { copyFile, readdir } from "fs/promises";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const target = process.argv[2]; // "site" or "dist"
+const target = process.argv[2]; // "shared", "site", or "dist"
 
-if (target === "site") {
+if (target === "shared") {
+  // TS → JS コンパイル（個別ファイル、バンドルなし）
+  // ts/shared/*.ts → js/shared/*.js
+  const files = await readdir(resolve(__dirname, "ts/shared"));
+  const entryPoints = files
+    .filter(f => f.endsWith(".ts"))
+    .map(f => resolve(__dirname, "ts/shared", f));
+
+  await esbuild.build({
+    entryPoints,
+    outdir: resolve(__dirname, "js/shared"),
+    format: "esm",
+    bundle: false,
+    sourcemap: false,
+  });
+
+  // plotly_shim は別途バンドルして npm import を解決
+  await esbuild.build({
+    entryPoints: [resolve(__dirname, "ts/shared/plotly_shim.ts")],
+    outfile: resolve(__dirname, "js/shared/plotly_shim.js"),
+    format: "esm",
+    bundle: true,
+    external: ["plotly.js-dist-min"],
+    allowOverwrite: true,
+  });
+} else if (target === "site") {
   await esbuild.build({
     entryPoints: [resolve(__dirname, "site/entrypoint_site.js")],
     bundle: true,
@@ -29,7 +54,7 @@ if (target === "site") {
 } else {
   // dist (default) - exe/broadlistening-viewer 用バンドル
   await esbuild.build({
-    entryPoints: [resolve(__dirname, "js/entrypoint.js")],
+    entryPoints: [resolve(__dirname, "ts/entrypoint.ts")],
     bundle: true,
     minify: true,
     outfile: resolve(__dirname, "lib/broadlistening/viewer/assets/broadlistening-view.js"),

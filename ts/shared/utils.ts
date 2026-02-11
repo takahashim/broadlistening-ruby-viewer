@@ -2,16 +2,13 @@
 
 /**
  * Wrap text with line breaks at specified character limit
- * @param {string} text - Text to wrap
- * @param {number} maxChars - Maximum characters per line
- * @returns {string} Wrapped text with <br> tags
  */
-export const wrapText = (text, maxChars) => {
+export const wrapText = (text: string, maxChars: number): string => {
   if (!text || text.length <= maxChars) {
     return text;
   }
 
-  const lines = [];
+  const lines: string[] = [];
   let remaining = text;
 
   while (remaining.length > 0) {
@@ -28,12 +25,8 @@ export const wrapText = (text, maxChars) => {
 
 /**
  * Wrap text with line breaks and limit number of lines
- * @param {string} text - Text to wrap
- * @param {number} maxChars - Maximum characters per line
- * @param {number} maxLines - Maximum number of lines (default: 4)
- * @returns {string} Wrapped text with <br> tags, truncated with "..." if needed
  */
-export const wrapTextWithLimit = (text, maxChars, maxLines = 4) => {
+export const wrapTextWithLimit = (text: string, maxChars: number, maxLines: number = 4): string => {
   if (!text) {
     return "";
   }
@@ -41,7 +34,7 @@ export const wrapTextWithLimit = (text, maxChars, maxLines = 4) => {
     return text;
   }
 
-  const lines = [];
+  const lines: string[] = [];
   let remaining = text;
 
   while (remaining.length > 0) {
