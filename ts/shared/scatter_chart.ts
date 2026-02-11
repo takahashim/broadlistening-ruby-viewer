@@ -1,5 +1,6 @@
 // Scatter Chart for Broadlistening visualization
 import Plotly from "./plotly_shim";
+import type { BroadlisteningArgument, BroadlisteningCluster, BroadlisteningData } from "./types";
 import { getClusterColor, INACTIVE_COLOR } from "./colors";
 import { escapeHtml } from "./decidim_core_shim";
 import { t } from "./i18n";
@@ -7,37 +8,33 @@ import { wrapText, wrapTextWithLimit } from "./utils";
 
 interface ScatterChartOptions {
   targetLevel: number;
-  selectedClusterId: string | null;
-  filteredArgumentIds: Set<string> | null;
-  filteredClusterIds: Set<string> | null;
-  maxLevel: number | null;
+  selectedClusterId?: string;
+  filteredArgumentIds?: Set<string>;
+  filteredClusterIds?: Set<string>;
+  maxLevel?: number;
   clusterColorMap?: Map<string, string>;
-  clusterById?: Map<string, any>;
-  childrenByParent?: Map<string, any[]>;
-  clustersByLevel?: Map<number, any[]>;
-  argumentsByClusterId?: Map<string, any[]>;
+  clusterById?: Map<string, BroadlisteningCluster>;
+  childrenByParent?: Map<string, BroadlisteningCluster[]>;
+  clustersByLevel?: Map<number, BroadlisteningCluster[]>;
+  argumentsByClusterId?: Map<string, BroadlisteningArgument[]>;
 }
 
 export default class ScatterChart {
   container: HTMLElement;
-  arguments: any[];
-  clusters: any[];
+  arguments: BroadlisteningArgument[];
+  clusters: BroadlisteningCluster[];
   options: ScatterChartOptions;
-  clusterById: Map<string, any>;
-  childrenByParent: Map<string, any[]>;
-  clustersByLevel: Map<number, any[]>;
-  argumentsByClusterId: Map<string, any[]>;
+  clusterById: Map<string, BroadlisteningCluster>;
+  childrenByParent: Map<string, BroadlisteningCluster[]>;
+  clustersByLevel: Map<number, BroadlisteningCluster[]>;
+  argumentsByClusterId: Map<string, BroadlisteningArgument[]>;
 
-  constructor(container: HTMLElement, data: any, options: Partial<ScatterChartOptions> = {}) {
+  constructor(container: HTMLElement, data: BroadlisteningData, options: Partial<ScatterChartOptions> = {}) {
     this.container = container;
     this.arguments = data.arguments || [];
     this.clusters = data.clusters || [];
     this.options = {
       targetLevel: 1,
-      selectedClusterId: null,
-      filteredArgumentIds: null,
-      filteredClusterIds: null,
-      maxLevel: null,
       ...options
     } as ScatterChartOptions;
 
@@ -101,15 +98,15 @@ export default class ScatterChart {
       scrollZoom: true
     };
 
-    Plotly.newPlot(this.container as any, [trace], layout, config);
+    Plotly.newPlot(this.container as unknown as Plotly.Root, [trace as Plotly.Data], layout as Partial<Plotly.Layout>, config);
   }
 
   buildTrace() {
     const colors = this.getPointColors();
 
     return {
-      x: this.arguments.map((a: any) => a.x),
-      y: this.arguments.map((a: any) => a.y),
+      x: this.arguments.map(a => a.x),
+      y: this.arguments.map(a => a.y),
       mode: "markers",
       type: "scattergl",
       marker: {
@@ -117,7 +114,7 @@ export default class ScatterChart {
         size: 8,
         opacity: 0.7
       },
-      text: this.arguments.map((a: any) => this.formatHoverText(a)),
+      text: this.arguments.map(a => this.formatHoverText(a)),
       hoverinfo: "text",
       hovertemplate: "%{text}<extra></extra>",
       hoverlabel: {
@@ -134,8 +131,8 @@ export default class ScatterChart {
 
     return {
       showlegend: false,
-      hovermode: "closest",
-      dragmode: "pan",
+      hovermode: "closest" as const,
+      dragmode: "pan" as const,
       xaxis: {
         showgrid: false,
         zeroline: false,
@@ -164,7 +161,7 @@ export default class ScatterChart {
     const colorOf = (id: string) => clusterColorMap?.get(id) || getClusterColor(id);
 
     // Pre-compute child cluster IDs for selected cluster (if any)
-    let childIds: Set<string> | null = null;
+    let childIds: Set<string> | undefined;
     if (selectedClusterId) {
       const childClusters = this.childrenByParent.get(selectedClusterId) || [];
       childIds = new Set(childClusters.map(c => c.id));
@@ -177,7 +174,7 @@ export default class ScatterChart {
 
       const clusterIds = arg.cluster_ids || [];
 
-      if (filteredClusterIds && maxLevel !== null) {
+      if (filteredClusterIds && maxLevel != null) {
         const deepestClusterId = this.getClusterIdAtLevel(clusterIds, maxLevel);
         if (!deepestClusterId || !filteredClusterIds.has(deepestClusterId)) {
           return INACTIVE_COLOR;
@@ -202,8 +199,8 @@ export default class ScatterChart {
     });
   }
 
-  calculateCentroid(points: any[]): { x: number; y: number } | null {
-    if (points.length === 0) return null;
+  calculateCentroid(points: BroadlisteningArgument[]): { x: number; y: number } | undefined {
+    if (points.length === 0) return undefined;
     const sumX = points.reduce((acc, p) => acc + p.x, 0);
     const sumY = points.reduce((acc, p) => acc + p.y, 0);
     return {
@@ -215,9 +212,9 @@ export default class ScatterChart {
   getClusterAnnotations() {
     const { targetLevel, selectedClusterId, filteredClusterIds, maxLevel } = this.options;
 
-    let clustersToShow: any[];
+    let clustersToShow: BroadlisteningCluster[];
 
-    if (filteredClusterIds && maxLevel !== null) {
+    if (filteredClusterIds && maxLevel != null) {
       const maxLevelClusters = this.clustersByLevel.get(maxLevel) || [];
       clustersToShow = maxLevelClusters.filter(c => filteredClusterIds.has(c.id));
     } else if (selectedClusterId) {
@@ -235,7 +232,7 @@ export default class ScatterChart {
         const points = this.argumentsByClusterId.get(cluster.id)!;
         const centroid = this.calculateCentroid(points);
 
-        if (!centroid) return null;
+        if (!centroid) return undefined;
 
         return {
           x: centroid.x,
@@ -252,10 +249,10 @@ export default class ScatterChart {
           borderwidth: 0
         };
       })
-      .filter(a => a !== null);
+      .filter(a => a !== undefined);
   }
 
-  formatHoverText(argument: any): string {
+  formatHoverText(argument: BroadlisteningArgument): string {
     const lines: string[] = [];
 
     const text = escapeHtml(argument.argument || "");
@@ -264,7 +261,7 @@ export default class ScatterChart {
 
     const { selectedClusterId, targetLevel, filteredClusterIds, maxLevel } = this.options;
 
-    if (filteredClusterIds && maxLevel !== null) {
+    if (filteredClusterIds && maxLevel != null) {
       const clusterId = this.getClusterIdAtLevel(argument.cluster_ids || [], maxLevel);
       if (clusterId) {
         const cluster = this.clusterById.get(clusterId);
@@ -307,10 +304,10 @@ export default class ScatterChart {
     const trace = this.buildTrace();
     const layout = this.buildLayout();
 
-    Plotly.react(this.container as any, [trace], layout);
+    Plotly.react(this.container as unknown as Plotly.Root, [trace as Plotly.Data], layout as Partial<Plotly.Layout>);
   }
 
   destroy() {
-    Plotly.purge(this.container as any);
+    Plotly.purge(this.container as unknown as Plotly.Root);
   }
 }

@@ -6,8 +6,8 @@ import { t } from "./i18n";
 interface SettingsDialogOptions {
   maxDensity: number;
   minValue: number;
-  onApply: ((settings: { maxDensity: number; minValue: number }) => void) | null;
-  onClose: (() => void) | null;
+  onApply?: (settings: { maxDensity: number; minValue: number }) => void;
+  onClose?: () => void;
 }
 
 /**
@@ -15,21 +15,17 @@ interface SettingsDialogOptions {
  */
 export default class SettingsDialog {
   options: SettingsDialogOptions;
-  element: HTMLElement | null;
-  dialog: Dialogs | null;
+  element?: HTMLElement;
+  dialog?: Dialogs;
   isOpen: boolean;
 
   constructor(options: Partial<SettingsDialogOptions> = {}) {
     this.options = {
       maxDensity: 0.2,
       minValue: 5,
-      onApply: null,
-      onClose: null,
       ...options
     };
 
-    this.element = null;
-    this.dialog = null;
     this.isOpen = false;
   }
 
@@ -150,7 +146,7 @@ export default class SettingsDialog {
   }
 
   focusFirstInput() {
-    const firstInput = this.element?.querySelector("input[type='range']") as HTMLElement | null;
+    const firstInput = this.element?.querySelector("input[type='range']") as HTMLElement | undefined;
     if (firstInput) {
       firstInput.focus();
     }
@@ -167,19 +163,13 @@ export default class SettingsDialog {
       minValue: parseInt(minValueInput.value, 10)
     };
 
-    if (this.options.onApply) {
-      this.options.onApply(newSettings);
-    }
-
+    this.options.onApply?.(newSettings);
     this.dialog!.close();
   }
 
   handleClose() {
     this.destroy();
-
-    if (this.options.onClose) {
-      this.options.onClose();
-    }
+    this.options.onClose?.();
   }
 
   close() {
@@ -192,12 +182,12 @@ export default class SettingsDialog {
 
     if (this.dialog) {
       this.dialog.destroy();
-      this.dialog = null;
+      this.dialog = undefined;
     }
 
     if (this.element) {
       this.element.remove();
-      this.element = null;
+      this.element = undefined;
     }
   }
 }

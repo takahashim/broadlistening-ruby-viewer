@@ -1,5 +1,6 @@
 // Treemap Chart for Broadlistening visualization
 import Plotly from "./plotly_shim";
+import type { BroadlisteningArgument, BroadlisteningCluster, BroadlisteningData } from "./types";
 import { escapeHtml } from "./decidim_core_shim";
 import { t } from "./i18n";
 import { wrapText } from "./utils";
@@ -18,33 +19,42 @@ const TREEMAP_COLORS = [
   "#f1e4d6"  // cream
 ];
 
+/** Plotly HTMLElement with event binding (augmented after newPlot) */
+interface PlotlyHTMLElement extends HTMLElement {
+  on(event: string, callback: (event: PlotlyClickEvent) => void): void;
+}
+
+interface PlotlyClickEvent {
+  points?: Array<{
+    data: { ids: string[] };
+    pointNumber: number;
+  }>;
+}
+
 interface TreemapChartOptions {
   level: string;
-  onLevelChange: ((level: string) => void) | null;
-  filteredArgumentIds: Set<string> | null;
-  filteredClusterIds: Set<string> | null;
+  onLevelChange?: (level: string) => void;
+  filteredArgumentIds?: Set<string>;
+  filteredClusterIds?: Set<string>;
 }
 
 export default class TreemapChart {
   container: HTMLElement;
-  arguments: any[];
-  clusters: any[];
+  arguments: BroadlisteningArgument[];
+  clusters: BroadlisteningCluster[];
   options: TreemapChartOptions;
   maxLevel: number;
 
-  constructor(container: HTMLElement, data: any, options: Partial<TreemapChartOptions> = {}) {
+  constructor(container: HTMLElement, data: BroadlisteningData, options: Partial<TreemapChartOptions> = {}) {
     this.container = container;
     this.arguments = data.arguments || [];
     this.clusters = data.clusters || [];
     this.options = {
       level: "0",
-      onLevelChange: null,
-      filteredArgumentIds: null,
-      filteredClusterIds: null,
       ...options
     };
 
-    this.maxLevel = Math.max(...this.clusters.map((c: any) => c.level || 0), 0);
+    this.maxLevel = Math.max(...this.clusters.map(c => c.level || 0), 0);
   }
 
   render() {
@@ -61,8 +71,9 @@ export default class TreemapChart {
       locale: "ja"
     };
 
-    Plotly.newPlot(this.container as any, [treemapData], layout, config).then(() => {
-      (this.container as any).on("plotly_click", (event: any) => {
+    Plotly.newPlot(this.container as unknown as Plotly.Root, [treemapData as Plotly.Data], layout as Partial<Plotly.Layout>, config).then(() => {
+      const plotEl = this.container as unknown as PlotlyHTMLElement;
+      plotEl.on("plotly_click", (event: PlotlyClickEvent) => {
         if (event.points && event.points[0]) {
           const clickedId = event.points[0].data.ids[event.points[0].pointNumber];
           if (clickedId && this.options.onLevelChange) {
@@ -71,8 +82,8 @@ export default class TreemapChart {
         }
       });
 
-      (this.container as any).on("plotly_hover", () => this.darkenPathbar());
-      (this.container as any).on("plotly_unhover", () => this.darkenPathbar());
+      plotEl.on("plotly_hover", () => this.darkenPathbar());
+      plotEl.on("plotly_unhover", () => this.darkenPathbar());
       this.darkenPathbar();
     });
   }
@@ -82,7 +93,7 @@ export default class TreemapChart {
     const isArgumentFiltering = !!filteredArgumentIds;
     const isClusterFiltering = !!filteredClusterIds;
 
-    const clusterNodes = this.clusters.map((cluster: any, index: number) => {
+    const clusterNodes = this.clusters.map((cluster, index) => {
       const isFiltered = isClusterFiltering &&
                          cluster.level === this.maxLevel &&
                          !filteredClusterIds!.has(cluster.id);
@@ -97,7 +108,7 @@ export default class TreemapChart {
       };
     });
 
-    const argumentNodes = this.arguments.map((arg: any) => {
+    const argumentNodes = this.arguments.map(arg => {
       const parentClusterId = arg.cluster_ids[arg.cluster_ids.length - 1];
 
       let isFiltered = false;
@@ -225,12 +236,12 @@ export default class TreemapChart {
     const treemapData = this.buildTreemapData();
     const layout = this.buildLayout();
 
-    Plotly.react(this.container as any, [treemapData], layout).then(() => {
+    Plotly.react(this.container as unknown as Plotly.Root, [treemapData as Plotly.Data], layout as Partial<Plotly.Layout>).then(() => {
       this.darkenPathbar();
     });
   }
 
   destroy() {
-    Plotly.purge(this.container as any);
+    Plotly.purge(this.container as unknown as Plotly.Root);
   }
 }

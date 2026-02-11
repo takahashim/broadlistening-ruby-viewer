@@ -13,13 +13,13 @@
 
 // --- Text utilities ---
 
-export const escapeHtml = (text: any): string => {
+export const escapeHtml = (text: unknown): string => {
   if (typeof text !== "string") return String(text ?? "");
   const map: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
   return text.replace(/[&<>"']/g, (c) => map[c]);
 };
 
-export const escapeQuotes = (text: any): string => {
+export const escapeQuotes = (text: unknown): string => {
   if (typeof text !== "string") return String(text ?? "");
   return text.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 };

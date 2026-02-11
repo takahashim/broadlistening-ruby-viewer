@@ -1,16 +1,16 @@
 // Fullscreen Modal component for Broadlistening visualization
 import { icon, escapeHtml } from "./decidim_core_shim";
 import { t } from "./i18n";
-import Toolbar, { VIEW_MODES, type ViewMode } from "./toolbar";
+import Toolbar, { VIEW_MODES, type ViewMode, type ToolbarOptions } from "./toolbar";
 
 interface FullscreenModalOptions {
   viewMode: ViewMode;
   hasDensityData: boolean;
   isDenseGroupEnabled: boolean;
-  onViewModeChange: ((mode: ViewMode) => void) | null;
-  onClose: (() => void) | null;
-  renderChart: ((container: HTMLElement) => void) | null;
-  renderBreadcrumb: ((container: HTMLElement) => void) | null;
+  onViewModeChange?: (mode: ViewMode) => void;
+  onClose?: () => void;
+  renderChart?: (container: HTMLElement) => void;
+  renderBreadcrumb?: (container: HTMLElement) => void;
 }
 
 /**
@@ -18,27 +18,20 @@ interface FullscreenModalOptions {
  */
 export default class FullscreenModal {
   options: FullscreenModalOptions;
-  modal: HTMLElement | null;
+  modal?: HTMLElement;
   isOpen: boolean;
-  _escapeHandler: ((e: KeyboardEvent) => void) | null;
-  toolbar: Toolbar | null;
+  _escapeHandler?: (e: KeyboardEvent) => void;
+  toolbar?: Toolbar;
 
   constructor(options: Partial<FullscreenModalOptions> = {}) {
     this.options = {
       viewMode: VIEW_MODES.SCATTER_ALL,
       hasDensityData: false,
       isDenseGroupEnabled: true,
-      onViewModeChange: null,
-      onClose: null,
-      renderChart: null,
-      renderBreadcrumb: null,
       ...options
     };
 
-    this.modal = null;
     this.isOpen = false;
-    this._escapeHandler = null;
-    this.toolbar = null;
   }
 
   open() {
@@ -53,9 +46,7 @@ export default class FullscreenModal {
       showSettings: false,
       showFullscreen: false,
       onViewModeChange: (mode: ViewMode) => {
-        if (this.options.onViewModeChange) {
-          this.options.onViewModeChange(mode);
-        }
+        this.options.onViewModeChange?.(mode);
         this.updateToolbarState({ viewMode: mode });
       }
     });
@@ -104,14 +95,14 @@ export default class FullscreenModal {
     document.addEventListener("keydown", this._escapeHandler);
   }
 
-  getChartContainer(): HTMLElement | null {
-    if (!this.modal) return null;
-    return this.modal.querySelector('[data-blv="chart-plot"]');
+  getChartContainer(): HTMLElement | undefined {
+    if (!this.modal) return undefined;
+    return this.modal.querySelector('[data-blv="chart-plot"]') as HTMLElement | undefined;
   }
 
-  getBreadcrumbContainer(): HTMLElement | null {
-    if (!this.modal) return null;
-    return this.modal.querySelector('[data-blv="fullscreen-breadcrumb"]');
+  getBreadcrumbContainer(): HTMLElement | undefined {
+    if (!this.modal) return undefined;
+    return this.modal.querySelector('[data-blv="fullscreen-breadcrumb"]') as HTMLElement | undefined;
   }
 
   renderChart() {
@@ -131,7 +122,7 @@ export default class FullscreenModal {
     }
   }
 
-  updateToolbarState(state: Record<string, any>) {
+  updateToolbarState(state: Partial<ToolbarOptions>) {
     if (!this.modal || !this.toolbar) return;
     const headerContainer = this.modal.querySelector('[data-blv="fullscreen-header"]') as HTMLElement;
     this.toolbar.updateState(headerContainer, state);
@@ -144,18 +135,16 @@ export default class FullscreenModal {
 
     if (this.modal) {
       document.body.removeChild(this.modal);
-      this.modal = null;
+      this.modal = undefined;
     }
 
     document.body.style.overflow = "";
 
     if (this._escapeHandler) {
       document.removeEventListener("keydown", this._escapeHandler);
-      this._escapeHandler = null;
+      this._escapeHandler = undefined;
     }
 
-    if (this.options.onClose) {
-      this.options.onClose();
-    }
+    this.options.onClose?.();
   }
 }

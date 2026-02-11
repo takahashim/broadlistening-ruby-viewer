@@ -1,6 +1,7 @@
 // Chart Manager for Broadlistening visualization
 // Orchestrates scatter and treemap charts with toolbar controls
 
+import type { BroadlisteningArgument, BroadlisteningCluster, BroadlisteningData } from "./types";
 import ScatterChart from "./scatter_chart";
 import TreemapChart from "./treemap_chart";
 import { CLUSTER_COLORS } from "./colors";
@@ -17,37 +18,37 @@ interface ChartManagerOptions {
 
 export default class ChartManager {
   container: HTMLElement;
-  data: any;
+  data: BroadlisteningData;
   options: ChartManagerOptions;
-  arguments: any[];
-  clusters: any[];
-  clusterById: Map<string, any>;
-  childrenByParent: Map<string, any[]>;
-  clustersByLevel: Map<number, any[]>;
+  arguments: BroadlisteningArgument[];
+  clusters: BroadlisteningCluster[];
+  clusterById: Map<string, BroadlisteningCluster>;
+  childrenByParent: Map<string, BroadlisteningCluster[]>;
+  clustersByLevel: Map<number, BroadlisteningCluster[]>;
   clusterColorMap: Map<string, string>;
-  argumentsByClusterId: Map<string, any[]>;
+  argumentsByClusterId: Map<string, BroadlisteningArgument[]>;
   maxLevel: number;
   hasDensityData: boolean;
   viewMode: ViewMode;
   isFullscreen: boolean;
-  selectedClusterId: string | null;
+  selectedClusterId?: string;
   treemapLevel: string;
   maxDensity: number;
   minValue: number;
   isDenseGroupEnabled: boolean;
-  scatterChart: ScatterChart | null;
-  treemapChart: TreemapChart | null;
-  toolbar: Toolbar | null;
-  settingsDialog: SettingsDialog | null;
-  fullscreenModal: FullscreenModal | null;
-  toolbarContainer: HTMLElement | null;
-  breadcrumbContainer: HTMLElement | null;
-  chartContainer: HTMLElement | null;
-  clusterGridContainer: HTMLElement | null;
-  clusterOverviewSection: HTMLElement | null;
-  _clusterGridClickHandler: ((e: Event) => void) | null;
+  scatterChart?: ScatterChart;
+  treemapChart?: TreemapChart;
+  toolbar?: Toolbar;
+  settingsDialog?: SettingsDialog;
+  fullscreenModal?: FullscreenModal;
+  toolbarContainer?: HTMLElement;
+  breadcrumbContainer?: HTMLElement;
+  chartContainer?: HTMLElement;
+  clusterGridContainer?: HTMLElement;
+  clusterOverviewSection?: HTMLElement;
+  _clusterGridClickHandler?: (e: Event) => void;
 
-  constructor(container: HTMLElement, data: any, options: Partial<ChartManagerOptions> = {}) {
+  constructor(container: HTMLElement, data: BroadlisteningData, options: Partial<ChartManagerOptions> = {}) {
     this.container = container;
     this.data = data;
     this.options = {
@@ -102,15 +103,14 @@ export default class ChartManager {
     }
 
     // Calculate max level
-    this.maxLevel = Math.max(...this.clusters.map((c: any) => c.level || 0), 0);
+    this.maxLevel = Math.max(...this.clusters.map(c => c.level || 0), 0);
 
     // Check if density filter is available (clusters have density_rank_percentile)
-    this.hasDensityData = this.clusters.some((c: any) => typeof c.density_rank_percentile === "number");
+    this.hasDensityData = this.clusters.some(c => typeof c.density_rank_percentile === "number");
 
     // State
     this.viewMode = VIEW_MODES.SCATTER_ALL;
     this.isFullscreen = false;
-    this.selectedClusterId = null;
     this.treemapLevel = "0";
 
     // Density filter settings
@@ -122,23 +122,6 @@ export default class ChartManager {
     if (this.hasDensityData) {
       this.updateDenseGroupEnabled();
     }
-
-    // Chart instances
-    this.scatterChart = null;
-    this.treemapChart = null;
-
-    // UI component instances
-    this.toolbar = null;
-    this.settingsDialog = null;
-    this.fullscreenModal = null;
-
-    // DOM references
-    this.toolbarContainer = null;
-    this.breadcrumbContainer = null;
-    this.chartContainer = null;
-    this.clusterGridContainer = null;
-    this.clusterOverviewSection = null;
-    this._clusterGridClickHandler = null;
 
     this.init();
   }
@@ -153,8 +136,8 @@ export default class ChartManager {
     this.renderChart();
 
     // Find and store reference to cluster grid and section
-    this.clusterGridContainer = document.getElementById("cluster-grid");
-    this.clusterOverviewSection = document.getElementById("cluster-overview-section");
+    this.clusterGridContainer = document.getElementById("cluster-grid") || undefined;
+    this.clusterOverviewSection = document.getElementById("cluster-overview-section") || undefined;
 
     this.bindClusterCardEvents();
   }
@@ -168,9 +151,9 @@ export default class ChartManager {
       </div>
     `;
 
-    this.toolbarContainer = this.container.querySelector('[data-blv="toolbar"]');
-    this.breadcrumbContainer = this.container.querySelector('[data-blv="breadcrumb"]');
-    this.chartContainer = this.container.querySelector('[data-blv="chart-container"]');
+    this.toolbarContainer = this.container.querySelector('[data-blv="toolbar"]') as HTMLElement | undefined;
+    this.breadcrumbContainer = this.container.querySelector('[data-blv="breadcrumb"]') as HTMLElement | undefined;
+    this.chartContainer = this.container.querySelector('[data-blv="chart-container"]') as HTMLElement | undefined;
 
     if (this.options.showToolbar) {
       this.renderToolbar();
@@ -231,7 +214,7 @@ export default class ChartManager {
     this.breadcrumbContainer!.querySelectorAll("[data-cluster-id]").forEach(btn => {
       btn.addEventListener("click", (e) => {
         const clusterId = (e.currentTarget as HTMLElement).dataset.clusterId;
-        this.navigateToCluster(clusterId || null);
+        this.navigateToCluster(clusterId || undefined);
       });
     });
   }
@@ -272,7 +255,7 @@ export default class ChartManager {
     container.querySelectorAll("[data-cluster-id]").forEach(btn => {
       btn.addEventListener("click", (e) => {
         const clusterId = (e.currentTarget as HTMLElement).dataset.clusterId;
-        this.selectedClusterId = clusterId || null;
+        this.selectedClusterId = clusterId || undefined;
         if (this.fullscreenModal) {
           this.fullscreenModal.renderBreadcrumb();
           this.fullscreenModal.renderChart();
@@ -282,15 +265,15 @@ export default class ChartManager {
     });
   }
 
-  buildClusterPath(clusterId: string): any[] {
-    const path: any[] = [];
-    let currentId: string | null = clusterId;
+  buildClusterPath(clusterId: string): BroadlisteningCluster[] {
+    const path: BroadlisteningCluster[] = [];
+    let currentId: string | undefined = clusterId;
 
     while (currentId && currentId !== "0") {
       const cluster = this.clusterById.get(currentId);
       if (cluster) {
         path.unshift(cluster);
-        currentId = cluster.parent;
+        currentId = cluster.parent || undefined;
       } else {
         break;
       }
@@ -315,7 +298,7 @@ export default class ChartManager {
     this.viewMode = mode;
     // Reset cluster selection when switching to treemap
     if (mode === VIEW_MODES.TREEMAP) {
-      this.selectedClusterId = null;
+      this.selectedClusterId = undefined;
       this.renderClusterGrid();
     }
     this.updateToolbarState();
@@ -323,7 +306,7 @@ export default class ChartManager {
     this.renderChart();
   }
 
-  navigateToCluster(clusterId: string | null) {
+  navigateToCluster(clusterId?: string) {
     this.selectedClusterId = clusterId;
     this.renderBreadcrumb();
     this.renderChart();
@@ -333,7 +316,7 @@ export default class ChartManager {
   renderClusterGrid() {
     if (!this.clusterGridContainer) return;
 
-    let clustersToShow: any[];
+    let clustersToShow: BroadlisteningCluster[];
     if (this.selectedClusterId) {
       clustersToShow = this.getChildClusters(this.selectedClusterId);
     } else {
@@ -400,13 +383,13 @@ export default class ChartManager {
       </nav>
     `;
 
-    this.clusterGridContainer!.parentNode!.insertBefore(breadcrumbEl, this.clusterGridContainer);
+    this.clusterGridContainer!.parentNode!.insertBefore(breadcrumbEl, this.clusterGridContainer!);
 
     breadcrumbEl.querySelectorAll("[data-navigate-cluster]").forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.preventDefault();
         const clusterId = (e.currentTarget as HTMLElement).dataset.navigateCluster;
-        this.navigateToCluster(clusterId || null);
+        this.navigateToCluster(clusterId || undefined);
         this.renderBreadcrumb();
       });
     });
@@ -415,11 +398,11 @@ export default class ChartManager {
   renderChart() {
     if (this.scatterChart) {
       this.scatterChart.destroy();
-      this.scatterChart = null;
+      this.scatterChart = undefined;
     }
     if (this.treemapChart) {
       this.treemapChart.destroy();
-      this.treemapChart = null;
+      this.treemapChart = undefined;
     }
 
     this.chartContainer!.innerHTML = '<div data-blv="chart-plot" class="w-full h-[350px] md:h-[500px]"></div>';
@@ -448,7 +431,6 @@ export default class ChartManager {
       const { filteredClusterIds } = this.getDenseClusters();
 
       const chart = new ScatterChart(container, this.data, {
-        selectedClusterId: null,
         targetLevel: this.maxLevel,
         filteredClusterIds: filteredClusterIds,
         maxLevel: this.maxLevel,
@@ -496,7 +478,7 @@ export default class ChartManager {
       onViewModeChange: (mode: ViewMode) => {
         this.viewMode = mode;
         if (mode === VIEW_MODES.TREEMAP) {
-          this.selectedClusterId = null;
+          this.selectedClusterId = undefined;
         }
         this.fullscreenModal!.updateToolbarState({ viewMode: mode });
         this.fullscreenModal!.renderBreadcrumb();
@@ -521,7 +503,7 @@ export default class ChartManager {
 
     if (this.fullscreenModal) {
       this.fullscreenModal.close();
-      this.fullscreenModal = null;
+      this.fullscreenModal = undefined;
     }
 
     this.updateToolbarState();
@@ -563,28 +545,28 @@ export default class ChartManager {
     }
   }
 
-  getChildClusters(parentId: string): any[] {
+  getChildClusters(parentId: string): BroadlisteningCluster[] {
     return this.childrenByParent.get(parentId) || [];
   }
 
-  getTopLevelClusters(): any[] {
+  getTopLevelClusters(): BroadlisteningCluster[] {
     return this.childrenByParent.get("0") || [];
   }
 
   getDenseClusters() {
     if (!this.hasDensityData) {
-      return { filtered: [], filteredClusterIds: new Set<string>(), isEmpty: true };
+      return { filtered: [] as BroadlisteningCluster[], filteredClusterIds: new Set<string>(), isEmpty: true };
     }
 
     const deepestLevelClusters = this.clustersByLevel.get(this.maxLevel) || [];
     const filteredDeepestLevelClusters = deepestLevelClusters
-      .filter((c: any) => c.density_rank_percentile <= this.maxDensity)
-      .filter((c: any) => (c.value || 0) >= this.minValue);
+      .filter(c => (c.density_rank_percentile ?? 1) <= this.maxDensity)
+      .filter(c => (c.value || 0) >= this.minValue);
 
-    const filteredClusterIds = new Set(filteredDeepestLevelClusters.map((c: any) => c.id));
+    const filteredClusterIds = new Set(filteredDeepestLevelClusters.map(c => c.id));
 
-    const filtered = [
-      ...this.clusters.filter((c: any) => c.level !== this.maxLevel),
+    const filtered: BroadlisteningCluster[] = [
+      ...this.clusters.filter(c => c.level !== this.maxLevel),
       ...filteredDeepestLevelClusters
     ];
 
@@ -629,7 +611,7 @@ export default class ChartManager {
         }
       },
       onClose: () => {
-        this.settingsDialog = null;
+        this.settingsDialog = undefined;
       }
     });
 
@@ -637,16 +619,20 @@ export default class ChartManager {
   }
 
   destroy() {
-    if (this.scatterChart) { this.scatterChart.destroy(); this.scatterChart = null; }
-    if (this.treemapChart) { this.treemapChart.destroy(); this.treemapChart = null; }
-    if (this.fullscreenModal) { this.fullscreenModal.close(); this.fullscreenModal = null; }
-    if (this.settingsDialog) { this.settingsDialog.close(); this.settingsDialog = null; }
+    if (this.scatterChart) { this.scatterChart.destroy(); this.scatterChart = undefined; }
+    if (this.treemapChart) { this.treemapChart.destroy(); this.treemapChart = undefined; }
+    if (this.fullscreenModal) { this.fullscreenModal.close(); this.fullscreenModal = undefined; }
+    if (this.settingsDialog) { this.settingsDialog.close(); this.settingsDialog = undefined; }
     if (this.clusterGridContainer && this._clusterGridClickHandler) {
       this.clusterGridContainer.removeEventListener("click", this._clusterGridClickHandler);
-      this._clusterGridClickHandler = null;
+      this._clusterGridClickHandler = undefined;
     }
     if (this.container) this.container.innerHTML = "";
-    this.toolbarContainer = this.breadcrumbContainer = this.chartContainer = null;
-    this.clusterGridContainer = this.clusterOverviewSection = this.toolbar = null;
+    this.toolbarContainer = undefined;
+    this.breadcrumbContainer = undefined;
+    this.chartContainer = undefined;
+    this.clusterGridContainer = undefined;
+    this.clusterOverviewSection = undefined;
+    this.toolbar = undefined;
   }
 }

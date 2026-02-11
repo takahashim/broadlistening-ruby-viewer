@@ -11,15 +11,15 @@ export const VIEW_MODES = {
 
 export type ViewMode = typeof VIEW_MODES[keyof typeof VIEW_MODES];
 
-interface ToolbarOptions {
+export interface ToolbarOptions {
   viewMode: ViewMode;
   hasDensityData: boolean;
   isDenseGroupEnabled: boolean;
   showSettings: boolean;
   showFullscreen: boolean;
-  onViewModeChange: ((mode: ViewMode) => void) | null;
-  onSettingsClick: (() => void) | null;
-  onFullscreenClick: (() => void) | null;
+  onViewModeChange?: (mode: ViewMode) => void;
+  onSettingsClick?: () => void;
+  onFullscreenClick?: () => void;
 }
 
 /**
@@ -35,9 +35,6 @@ export default class Toolbar {
       isDenseGroupEnabled: true,
       showSettings: true,
       showFullscreen: true,
-      onViewModeChange: null,
-      onSettingsClick: null,
-      onFullscreenClick: null,
       ...options
     };
   }
