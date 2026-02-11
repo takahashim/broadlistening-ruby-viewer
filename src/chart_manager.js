@@ -176,14 +176,14 @@ export default class ChartManager {
       <div class="flex items-center gap-2 flex-wrap">
         <span class="text-xs font-medium text-sky-700">${escapeHtml(t("breadcrumb.viewing"))}</span>
         <nav class="flex items-center gap-1 flex-wrap">
-          <button class="text-sm bg-transparent border-none px-2 py-1 rounded cursor-pointer text-sky-600 transition-all duration-150 hover:bg-sky-100 hover:text-sky-700" data-cluster-id="">
+          <a class="text-sm cursor-pointer text-sky-600 underline hover:text-sky-800" data-cluster-id="">
             ${escapeHtml(t("breadcrumb.all"))}
-          </button>
+          </a>
           ${path.map((cluster, index) => `
             <span class="flex items-center text-slate-400 [&_svg]:w-3.5 [&_svg]:h-3.5">${icon("arrow-right-s-line")}</span>
             ${index === path.length - 1
-              ? `<span class="text-sm font-semibold px-2 py-1 bg-sky-600 text-white rounded">${escapeHtml(cluster.label)}</span>`
-              : `<button class="text-sm bg-transparent border-none px-2 py-1 rounded cursor-pointer text-sky-600 transition-all duration-150 hover:bg-sky-100 hover:text-sky-700" data-cluster-id="${escapeHtml(cluster.id)}">${escapeHtml(cluster.label)}</button>`
+              ? `<span class="text-sm font-semibold text-slate-800">${escapeHtml(cluster.label)}</span>`
+              : `<a class="text-sm cursor-pointer text-sky-600 underline hover:text-sky-800" data-cluster-id="${escapeHtml(cluster.id)}">${escapeHtml(cluster.label)}</a>`
             }
           `).join("")}
         </nav>
@@ -221,14 +221,14 @@ export default class ChartManager {
       <div class="flex items-center gap-2 flex-wrap py-2">
         <span class="text-xs font-medium text-sky-700">${escapeHtml(t("breadcrumb.viewing"))}</span>
         <nav class="flex items-center gap-1 flex-wrap">
-          <button class="text-sm bg-transparent border-none px-2 py-1 rounded cursor-pointer text-sky-600 transition-all duration-150 hover:bg-sky-100 hover:text-sky-700" data-cluster-id="">
+          <a class="text-sm cursor-pointer text-sky-600 underline hover:text-sky-800" data-cluster-id="">
             ${escapeHtml(t("breadcrumb.all"))}
-          </button>
+          </a>
           ${path.map((cluster, index) => `
             <span class="flex items-center text-slate-400 [&_svg]:w-3.5 [&_svg]:h-3.5">${icon("arrow-right-s-line")}</span>
             ${index === path.length - 1
-              ? `<span class="text-sm font-semibold px-2 py-1 bg-sky-600 text-white rounded">${escapeHtml(cluster.label)}</span>`
-              : `<button class="text-sm bg-transparent border-none px-2 py-1 rounded cursor-pointer text-sky-600 transition-all duration-150 hover:bg-sky-100 hover:text-sky-700" data-cluster-id="${escapeHtml(cluster.id)}">${escapeHtml(cluster.label)}</button>`
+              ? `<span class="text-sm font-semibold text-slate-800">${escapeHtml(cluster.label)}</span>`
+              : `<a class="text-sm cursor-pointer text-sky-600 underline hover:text-sky-800" data-cluster-id="${escapeHtml(cluster.id)}">${escapeHtml(cluster.label)}</a>`
             }
           `).join("")}
         </nav>
@@ -367,26 +367,31 @@ export default class ChartManager {
     breadcrumbEl.dataset.blv = "cluster-breadcrumb";
     breadcrumbEl.className = "mb-4 px-4 py-3 bg-slate-50 rounded-lg border border-slate-200";
     breadcrumbEl.innerHTML = `
-      <nav class="flex items-center flex-wrap gap-3">
-        <button class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-sky-600 bg-white border border-slate-200 rounded-md cursor-pointer transition-all duration-150 hover:bg-sky-50 hover:border-sky-600 [&_svg]:w-4 [&_svg]:h-4 [&_svg]:shrink-0" data-navigate-cluster="">
-          ${icon("arrow-left-s-line")}
-          ${escapeHtml(t("cluster.back_to_all"))}
-        </button>
-        <span class="text-sm text-slate-500">
-          ${path.map(c => escapeHtml(c.label)).join(" > ")}
-        </span>
+      <nav class="flex items-center flex-wrap gap-1">
+        <a class="text-sm cursor-pointer text-sky-600 underline hover:text-sky-800" data-navigate-cluster="">
+          ${escapeHtml(t("breadcrumb.all"))}
+        </a>
+        ${path.map((c, index) => `
+          <span class="flex items-center text-slate-400 [&_svg]:w-3.5 [&_svg]:h-3.5">${icon("arrow-right-s-line")}</span>
+          ${index === path.length - 1
+            ? `<span class="text-sm font-semibold text-slate-800">${escapeHtml(c.label)}</span>`
+            : `<a class="text-sm cursor-pointer text-sky-600 underline hover:text-sky-800" data-navigate-cluster="${escapeHtml(c.id)}">${escapeHtml(c.label)}</a>`
+          }
+        `).join("")}
       </nav>
     `;
 
     // Insert before the grid
     this.clusterGridContainer.parentNode.insertBefore(breadcrumbEl, this.clusterGridContainer);
 
-    // Bind click event
-    breadcrumbEl.querySelector("[data-navigate-cluster]").addEventListener("click", (e) => {
-      e.preventDefault();
-      this.navigateToCluster(null);
-      // Also update the chart breadcrumb
-      this.renderBreadcrumb();
+    // Bind click events for all navigable elements
+    breadcrumbEl.querySelectorAll("[data-navigate-cluster]").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const clusterId = e.currentTarget.dataset.navigateCluster;
+        this.navigateToCluster(clusterId || null);
+        this.renderBreadcrumb();
+      });
     });
   }
 
