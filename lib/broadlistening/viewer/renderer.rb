@@ -59,7 +59,7 @@ module Broadlistening
 end
 
 # Keep the top-level function for backward compatibility (used by ruby.wasm site mode)
-def render_html(json_str, template_str, css_str, js_str, i18n_str, page_title = "分析結果")
+def render_html(json_str, template_str, css_str, js_str, i18n_str, page_title = "分析結果", visualization_body_erb_str = nil)
   data = JSON.parse(json_str)
   title = page_title
   css = css_str
@@ -79,7 +79,7 @@ def render_html(json_str, template_str, css_str, js_str, i18n_str, page_title = 
   # Render visualization body partial
   data_id = "report-data"
   container_id = "chart-container"
-  visualization_body_str = File.read(
+  visualization_body_str = visualization_body_erb_str || File.read(
     File.join(File.expand_path("assets/shared", File.dirname(__FILE__)), "_visualization_body.html.erb")
   )
   visualization_body_html = ERB.new(visualization_body_str, trim_mode: "-").result(binding)

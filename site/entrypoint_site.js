@@ -2,6 +2,7 @@ import ChartManager from "../js/shared/chart_manager";
 import i18nMessages from "../lib/broadlistening/viewer/assets/i18n/ja.json";
 import renderRb from "../lib/broadlistening/viewer/renderer.rb";
 import templateErb from "../lib/broadlistening/viewer/assets/template.html.erb";
+import visualizationBodyErb from "../lib/broadlistening/viewer/assets/shared/_visualization_body.html.erb";
 import { DefaultRubyVM } from "@ruby/wasm-wasi/dist/browser";
 
 let vm = null;
@@ -34,6 +35,7 @@ function showView(jsonStr) {
   window.__blvCssStr = "";
   window.__blvJsStr = "";
   window.__blvI18nStr = JSON.stringify(i18nMessages);
+  window.__blvVisualizationBodyErb = visualizationBodyErb;
 
   vm.eval(`
     require "js"
@@ -42,7 +44,8 @@ function showView(jsonStr) {
     css_str = JS.global[:__blvCssStr].to_s
     js_str = JS.global[:__blvJsStr].to_s
     i18n_str = JS.global[:__blvI18nStr].to_s
-    JS.global[:__blvResultHtml] = render_html(json_str, template_str, css_str, js_str, i18n_str)
+    visualization_body_erb = JS.global[:__blvVisualizationBodyErb].to_s
+    JS.global[:__blvResultHtml] = render_html(json_str, template_str, css_str, js_str, i18n_str, "分析結果", visualization_body_erb)
   `);
 
   const fullHtml = window.__blvResultHtml;
