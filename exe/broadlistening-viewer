@@ -12,7 +12,7 @@ OptionParser.new do |opts|
 end.parse!
 
 input_file = ARGV[0] or abort("Usage: broadlistening-viewer INPUT_JSON [-o OUTPUT] [--title TITLE]")
-output_file = options[:output] || input_file.sub(/\.json$/, ".html")
+output_file = options[:output] || "report.html"
 
 json_str = File.read(input_file)
 renderer = Broadlistening::Viewer::Renderer.new(title: options[:title])
