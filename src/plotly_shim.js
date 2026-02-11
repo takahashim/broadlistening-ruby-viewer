@@ -1,1 +1,3 @@
-export default window.Plotly;
+import Plotly from "plotly.js-dist-min";
+
+export default Plotly;

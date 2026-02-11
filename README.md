@@ -33,6 +33,7 @@ The following files are generated in `public/`:
 - `index.html` - entry point
 - `broadlistening-site.js` - bundled JavaScript
 - `app.css` - compiled stylesheet
+- `ruby+stdlib.wasm` - ruby.wasm binary for browser runtime
 
 ### Local Preview
 
@@ -48,7 +49,7 @@ Deploy the `public/` directory as-is to any static hosting service.
 
 ## HTML Generation (`generate.rb`)
 
-Generates a self-contained single HTML file from JSON.
+Generates a self-contained single HTML file from JSON. Plotly is bundled into the embedded JS, so output HTML size is larger than before.
 
 ### Build (JS bundle)
 
@@ -83,12 +84,12 @@ bundle exec ruby generate.rb input.json -o output.html --title "Title"
 │   ├── chart_manager.js
 │   ├── scatter_chart.js
 │   ├── treemap_chart.js
-│   ├── plotly_shim.js    # standalone shim returning window.Plotly
+│   ├── plotly_shim.js    # standalone shim returning Plotly from npm package
 │   ├── ...
 │   └── app.scss
 ├── site/
 │   └── entrypoint_site.js  # entry point for static site (ruby.wasm)
-├── public/               # static site build output + index.html
+├── public/               # static site build output + index.html + ruby+stdlib.wasm
 ├── dist/                 # JS bundle output for generate.rb
 ├── i18n/
 │   └── ja.json           # Japanese messages

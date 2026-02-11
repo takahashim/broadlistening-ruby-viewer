@@ -29,6 +29,7 @@ pnpm run build:site
 - `index.html` — エントリポイント
 - `broadlistening-site.js` — バンドル済み JS
 - `app.css` — コンパイル済み CSS
+- `ruby+stdlib.wasm` — ブラウザ実行用 ruby.wasm バイナリ
 
 ### ローカル確認
 
@@ -44,7 +45,7 @@ ruby -run -e httpd public
 
 ## HTML 生成 (generate.rb)
 
-JSON から自己完結型の単一 HTML ファイルを生成します。
+JSON から自己完結型の単一 HTML ファイルを生成します。Plotly を埋め込み JS に同梱するため、生成される HTML サイズは従来より大きくなります。
 
 ### ビルド (JS バンドル)
 
@@ -69,12 +70,12 @@ bundle exec ruby generate.rb input.json -o output.html --title "タイトル"
 │   ├── chart_manager.js
 │   ├── scatter_chart.js
 │   ├── treemap_chart.js
-│   ├── plotly_shim.js    # window.Plotly を返す standalone 版 shim
+│   ├── plotly_shim.js    # npm パッケージ版 Plotly を返す standalone 版 shim
 │   ├── ...
 │   └── app.scss
 ├── site/
 │   └── entrypoint_site.js  # 静的サイト用エントリポイント (ruby.wasm)
-├── public/               # 静的サイトのビルド出力 + index.html
+├── public/               # 静的サイトのビルド出力 + index.html + ruby+stdlib.wasm
 ├── dist/                 # generate.rb 用 JS バンドル出力
 ├── i18n/
 │   └── ja.json           # 日本語メッセージ

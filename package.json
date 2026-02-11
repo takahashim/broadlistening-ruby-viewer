@@ -11,8 +11,11 @@
     "build": "pnpm run build:site && pnpm run build:dist"
   },
   "devDependencies": {
+    "@ruby/3.4-wasm-wasi": "2.8.1",
+    "@ruby/wasm-wasi": "2.8.1",
     "@tailwindcss/cli": "^4.1.18",
     "esbuild": "^0.24.0",
+    "plotly.js-dist-min": "2.35.0",
     "tailwindcss": "^4.1.18"
   },
   "pnpm": {

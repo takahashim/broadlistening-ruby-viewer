@@ -1,4 +1,5 @@
 import * as esbuild from "esbuild";
+import { copyFile } from "fs/promises";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -14,6 +15,17 @@ if (target === "site") {
     format: "esm",
     loader: { ".rb": "text", ".erb": "text", ".json": "json" },
   });
+
+  const wasmSource = resolve(__dirname, "node_modules/@ruby/3.4-wasm-wasi/dist/ruby+stdlib.wasm");
+  const wasmDestination = resolve(__dirname, "public/ruby+stdlib.wasm");
+  try {
+    await copyFile(wasmSource, wasmDestination);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Failed to copy ruby.wasm from ${wasmSource} to ${wasmDestination}: ${message}`
+    );
+  }
 } else {
   // dist (default) - generate.rb 用バンドル
   await esbuild.build({

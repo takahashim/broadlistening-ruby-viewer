@@ -2,18 +2,23 @@ import ChartManager from "../src/chart_manager";
 import i18nMessages from "../i18n/ja.json";
 import renderRb from "../render.rb";
 import templateErb from "../template.html.erb";
+import { DefaultRubyVM } from "@ruby/wasm-wasi/dist/browser";
 
 let vm = null;
 let currentManager = null;
 
 async function initRubyVM() {
-  const { DefaultRubyVM } = await import(
-    "https://cdn.jsdelivr.net/npm/@ruby/wasm-wasi@2.8.1/dist/browser/+esm"
-  );
-  const response = await fetch(
-    "https://cdn.jsdelivr.net/npm/@ruby/3.4-wasm-wasi@2.8.1/dist/ruby+stdlib.wasm"
-  );
-  const module = await WebAssembly.compileStreaming(response);
+  const wasmUrl = new URL("./ruby+stdlib.wasm", import.meta.url);
+  const response = await fetch(wasmUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to load ruby.wasm (${response.status} ${response.statusText})`);
+  }
+  let module;
+  try {
+    module = await WebAssembly.compileStreaming(response.clone());
+  } catch {
+    module = await WebAssembly.compile(await response.arrayBuffer());
+  }
   const { vm: rubyVM } = await DefaultRubyVM(module);
   rubyVM.eval(renderRb);
   return rubyVM;
