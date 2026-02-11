@@ -9,28 +9,28 @@
 <body>
   <div id="broadlistening-view-i18n" hidden data-messages='<%= i18n_json %>'></div>
 
-  <div style="max-width: 1200px; margin: 0 auto; padding: 1rem;">
-    <div style="text-align: center;">
+  <div class="max-w-[1200px] mx-auto p-4">
+    <div class="text-center">
       <h1><%= title %></h1>
-      <p style="color: #666;"><%= comment_count %>件のコメントを分析</p>
+      <p class="text-gray-500"><%= comment_count %>件のコメントを分析</p>
     </div>
 
     <% if overview && !overview.empty? %>
-      <section style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
-        <h3 style="margin-top: 0; margin-bottom: 1rem;">概要</h3>
+      <section class="bg-gray-50 p-6 rounded-lg mb-8">
+        <h3 class="mt-0 mb-4">概要</h3>
         <div><%= overview_html %></div>
       </section>
     <% end %>
 
     <script id="report-data" type="application/json"><%= report_json %></script>
     <div data-broadlistening-view-manager data-data-source="report-data" id="chart-container"></div>
-    <p style="text-align: center; color: #666; font-size: 0.875rem; margin-top: 0.5rem;">
+    <p class="text-center text-gray-500 text-sm mt-2">
       ドラッグで移動、スクロールでズームできます。ツリーマップではクラスタをクリックして詳細を確認できます。
     </p>
 
     <% if clusters.any? -%>
-      <section style="margin-top: 2rem;" id="cluster-overview-section">
-        <h3 style="margin-bottom: 1rem;">クラスター概要</h3>
+      <section class="mt-8" id="cluster-overview-section">
+        <h3 class="mb-4">クラスター概要</h3>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="cluster-grid">
           <% clusters.each_with_index do |cluster, index| -%>
             <div class="card p-4 hover:shadow-md transition-shadow cursor-pointer"

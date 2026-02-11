@@ -4,6 +4,15 @@
 @source "../public/index.html";
 @source "./*.js";
 
+/* Plotly modebar: undo Tailwind preflight interference */
+.modebar-container svg {
+  display: inline-block;
+}
+
+.modebar-btn {
+  line-height: 0;
+}
+
 /* Decidim-compatible utility classes */
 .card {
   background: #fff;
