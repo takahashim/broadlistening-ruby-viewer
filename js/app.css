@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@source "../template.html.erb";
+@source "../lib/broadlistening/viewer/assets/template.html.erb";
 @source "../public/index.html";
 @source "./*.js";
 

@@ -27,12 +27,12 @@ if (target === "site") {
     );
   }
 } else {
-  // dist (default) - generate.rb 用バンドル
+  // dist (default) - exe/broadlistening-viewer 用バンドル
   await esbuild.build({
-    entryPoints: [resolve(__dirname, "src/entrypoint.js")],
+    entryPoints: [resolve(__dirname, "js/entrypoint.js")],
     bundle: true,
     minify: true,
-    outfile: resolve(__dirname, "dist/broadlistening-view.js"),
+    outfile: resolve(__dirname, "lib/broadlistening/viewer/assets/broadlistening-view.js"),
     format: "iife",
   });
 }

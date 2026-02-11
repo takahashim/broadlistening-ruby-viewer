@@ -3,10 +3,10 @@
   "packageManager": "pnpm@10.28.2",
   "scripts": {
     "build:site:js": "node build.mjs site",
-    "build:site:css": "tailwindcss -i src/app.css -o public/app.css --minify",
+    "build:site:css": "tailwindcss -i js/app.css -o public/app.css --minify",
     "build:site": "pnpm run build:site:js && pnpm run build:site:css",
     "build:dist:js": "node build.mjs dist",
-    "build:dist:css": "tailwindcss -i src/app.css -o dist/app.css --minify",
+    "build:dist:css": "tailwindcss -i js/app.css -o lib/broadlistening/viewer/assets/app.css --minify",
     "build:dist": "pnpm run build:dist:js && pnpm run build:dist:css",
     "build": "pnpm run build:site && pnpm run build:dist"
   },

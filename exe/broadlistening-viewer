@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "optparse"
+require_relative "../lib/broadlistening/viewer/renderer"
+
+options = { title: "分析結果", output: nil }
+OptionParser.new do |opts|
+  opts.banner = "Usage: broadlistening-viewer INPUT_JSON [-o OUTPUT] [--title TITLE]"
+  opts.on("-o", "--output FILE") { |v| options[:output] = v }
+  opts.on("--title TITLE") { |v| options[:title] = v }
+end.parse!
+
+input_file = ARGV[0] or abort("Usage: broadlistening-viewer INPUT_JSON [-o OUTPUT] [--title TITLE]")
+output_file = options[:output] || input_file.sub(/\.json$/, ".html")
+
+json_str = File.read(input_file)
+renderer = Broadlistening::Viewer::Renderer.new(title: options[:title])
+renderer.save(json_str, output_file)
+puts "Generated: #{output_file}"

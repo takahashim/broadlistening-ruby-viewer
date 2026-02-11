@@ -1,5 +1,7 @@
 node_modules/
-dist/
+lib/broadlistening/viewer/assets/broadlistening-view.js
+lib/broadlistening/viewer/assets/app.css
 public/broadlistening-site.js
 public/app.css
 public/ruby+stdlib.wasm
+*.gem

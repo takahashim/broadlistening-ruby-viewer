@@ -1,7 +1,7 @@
-import ChartManager from "../src/chart_manager";
-import i18nMessages from "../i18n/ja.json";
-import renderRb from "../render.rb";
-import templateErb from "../template.html.erb";
+import ChartManager from "../js/chart_manager";
+import i18nMessages from "../lib/broadlistening/viewer/assets/i18n/ja.json";
+import renderRb from "../lib/broadlistening/viewer/renderer.rb";
+import templateErb from "../lib/broadlistening/viewer/assets/template.html.erb";
 import { DefaultRubyVM } from "@ruby/wasm-wasi/dist/browser";
 
 let vm = null;

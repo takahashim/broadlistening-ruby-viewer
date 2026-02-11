@@ -21,9 +21,17 @@ jobs:
           node-version: '22'
           cache: pnpm
 
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm run build:site
+
+      - run: pnpm run build:dist
+
+      - run: gem build broadlistening-viewer.gemspec
 
       - name: Create release archive
         run: cd public && zip -r ../broadlistening-viewer-${{ github.ref_name }}.zip .
@@ -31,5 +39,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: broadlistening-viewer-${{ github.ref_name }}.zip
+          files: |
+            broadlistening-viewer-${{ github.ref_name }}.zip
+            broadlistening-viewer-*.gem
           generate_release_notes: true
