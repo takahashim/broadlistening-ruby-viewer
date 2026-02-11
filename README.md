@@ -1,4 +1,4 @@
-# Broadlistening Ruby Viewer
+# Broadlistening Viewer
 
 [日本語版 README](./README.ja.md)
 

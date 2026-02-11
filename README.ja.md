@@ -1,4 +1,4 @@
-# Broadlistening Ruby Viewer
+# Broadlistening Viewer
 
 Broadlistening の分析結果 JSON を可視化するスタンドアロンツールです。
 
